@@ -28,16 +28,36 @@ export class GeminiError extends Error {
   }
 }
 
-function friendlyError(status, apiMessage) {
+// Seconds Google asks us to wait, from google.rpc.RetryInfo (e.g. "23s" or "0.5s").
+function retryDelaySeconds(error) {
+  const info = (error?.details || []).find((d) => /RetryInfo$/.test(d['@type'] || ''));
+  const secs = parseFloat(info?.retryDelay);
+  return Number.isFinite(secs) ? Math.ceil(secs) : null;
+}
+
+function friendlyError(status, error) {
+  const apiMessage = error?.message || '';
   if (status === 400 && /api key/i.test(apiMessage)) return 'Your Gemini API key is invalid. Check it in Settings.';
   if (status === 401 || status === 403) return 'Gemini rejected the API key (not authorised). Check it in Settings.';
   if (status === 404) return 'That model was not found. Pick another model in Settings.';
-  if (status === 429) return 'Rate limit or quota reached on your Gemini key. Wait a moment and try again.';
+  if (status === 429) {
+    const wait = retryDelaySeconds(error);
+    const detail = apiMessage.split('\n')[0].slice(0, 300);
+    return [
+      `Gemini quota or rate limit hit${wait ? `. Retry in ~${wait}s` : ''}.`,
+      detail && `Google says: ${detail}`,
+      'Tips: turn off "Search the web", or pick a lighter model (e.g. a flash-lite one) in Settings → Load models.'
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
   if (status >= 500) return 'Gemini is having trouble right now. Try again shortly.';
   return apiMessage || `Gemini request failed (${status}).`;
 }
 
-async function call(path, apiKey, init = {}) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function call(path, apiKey, init = {}, retried = false) {
   let res;
   try {
     res = await fetch(`${API}/${path}`, {
@@ -48,7 +68,15 @@ async function call(path, apiKey, init = {}) {
     throw new GeminiError('Network error: could not reach the Gemini API.', 0);
   }
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new GeminiError(friendlyError(res.status, body?.error?.message), res.status);
+  if (!res.ok) {
+    // Short per-minute limits: wait once and retry instead of failing.
+    const wait = retryDelaySeconds(body?.error);
+    if (res.status === 429 && !retried && wait !== null && wait <= 10) {
+      await sleep(wait * 1000 + 250);
+      return call(path, apiKey, init, true);
+    }
+    throw new GeminiError(friendlyError(res.status, body?.error), res.status);
+  }
   return body;
 }
 
