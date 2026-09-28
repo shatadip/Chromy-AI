@@ -1,4 +1,6 @@
 import { getSettings, getMemory, clearMemory, getTemplates, setTemplates, MAX_TEMPLATES } from './lib/store.js';
+import { runRequest } from './lib/engine.js';
+import { builtinStatus } from './lib/local.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -76,7 +78,12 @@ function messageEl(entry) {
   div.className = `msg ${entry.role}`;
   const meta = document.createElement('span');
   meta.className = 'meta';
-  meta.textContent = entry.role === 'user' ? `You · ${entry.mode || ''}` : entry.role === 'error' ? 'Error' : 'Chromy';
+  meta.textContent =
+    entry.role === 'user'
+      ? `You · ${entry.mode || ''}`
+      : entry.role === 'error'
+        ? 'Error'
+        : `Chromy${entry.via ? ` · ${entry.via}` : ''}`;
   div.append(meta);
 
   if (entry.role === 'model') {
@@ -197,20 +204,22 @@ async function setMode(mode) {
 
 async function send({ prompt, mode, usePage, searchWeb }) {
   if (state.busy || !prompt.trim()) return;
-  const settings = await getSettings();
-  if (!settings.apiKey) {
-    els.noKey.hidden = false;
-    return;
-  }
   state.busy = true;
   els.send.disabled = true;
   const pendingUser = { role: 'user', text: prompt, mode };
   await renderThread({ extra: [pendingUser], typing: true });
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const res = await chrome.runtime
-    .sendMessage({ type: 'run', payload: { prompt, mode, usePage, searchWeb, tabId: tab?.id } })
-    .catch((e) => ({ ok: false, error: e.message }));
+  const payload = { prompt, mode, usePage, searchWeb, tabId: tab?.id };
+  // Chrome's built-in model is only guaranteed in window contexts, so when it's ready we run
+  // the engine chain here; otherwise the service worker runs it (and finishes if the popup closes).
+  const res =
+    (await builtinStatus()) === 'available'
+      ? await runRequest(payload).then(
+          (data) => ({ ok: true, data }),
+          (e) => ({ ok: false, error: e.message })
+        )
+      : await chrome.runtime.sendMessage({ type: 'run', payload }).catch((e) => ({ ok: false, error: e.message }));
 
   state.busy = false;
   els.send.disabled = false;
@@ -332,7 +341,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 (async function init() {
   const settings = await getSettings();
-  els.noKey.hidden = !!settings.apiKey;
+  chrome.runtime.sendMessage({ type: 'engines' }).then(async (res) => {
+    const anyReady = (await builtinStatus()) === 'available' || (res?.ok && Object.values(res.data).some((r) => r === null));
+    els.noKey.hidden = anyReady;
+  });
   els.usePage.checked = settings.usePageDefault;
   els.searchWeb.checked = settings.searchWebDefault;
   await setMode('ask');

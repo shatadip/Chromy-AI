@@ -1,6 +1,8 @@
 // Thin wrappers around chrome.storage.local shared by the popup, options page and worker.
 
 export const DEFAULTS = {
+  provider: 'auto', // 'auto' | 'builtin' | 'ollama' | 'gemini' (preferred engine; others are fallbacks)
+  ollamaModel: '',
   apiKey: '',
   model: 'gemini-flash-latest',
   memorySize: 10,

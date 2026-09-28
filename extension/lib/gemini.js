@@ -46,7 +46,7 @@ function friendlyError(status, error) {
     return [
       `Gemini quota or rate limit hit${wait ? `. Retry in ~${wait}s` : ''}.`,
       detail && `Google says: ${detail}`,
-      'Tips: turn off "Search the web", or pick a lighter model (e.g. a flash-lite one) in Settings → Load models.'
+      'Tip: pick a lighter model (e.g. a flash-lite one) in Settings → Load models.'
     ]
       .filter(Boolean)
       .join('\n');
@@ -93,17 +93,10 @@ export async function listModels(apiKey) {
  * @param {string} opts.model
  * @param {'ask'|'task'} opts.mode
  * @param {Array<{role:string,text:string}>} opts.history
- * @param {string} opts.prompt
- * @param {{title:string,url:string,text:string}|null} opts.page
+ * @param {string} opts.userText prompt, with page content already attached
  * @param {boolean} opts.searchWeb
  */
-export async function generate({ apiKey, model, mode, history, prompt, page, searchWeb }) {
-  let userText = prompt;
-  if (page) {
-    userText =
-      `${prompt}\n\n--- Current page ---\nTitle: ${page.title}\nURL: ${page.url}\n\n${page.text}\n--- End of page ---`;
-  }
-
+export async function generate({ apiKey, model, mode, history, userText, searchWeb }) {
   const contents = [
     ...history.map((m) => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.text }] })),
     { role: 'user', parts: [{ text: userText }] }

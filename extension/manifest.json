@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Chromy AI - Ask / Task / Repeat",
   "short_name": "Chromy AI",
-  "version": "1.0.0",
-  "description": "Short, practical AI prompt guidance. Ask for better prompts, run tasks on any page or the web, and repeat saved prompts.",
+  "version": "1.1.0",
+  "description": "AI prompt coach that always answers: on-device AI, local Ollama or Gemini. Ask, run tasks on any page or the web, repeat prompts.",
   "minimum_chrome_version": "116",
   "action": {
     "default_popup": "popup.html",
@@ -26,8 +26,9 @@
     "type": "module"
   },
   "options_page": "options.html",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "declarativeNetRequestWithHostAccess"],
   "host_permissions": ["https://generativelanguage.googleapis.com/*"],
+  "optional_host_permissions": ["http://localhost:11434/*", "http://127.0.0.1:11434/*"],
   "commands": {
     "_execute_action": {
       "suggested_key": { "default": "Alt+Shift+Y" },

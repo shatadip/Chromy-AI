@@ -6,7 +6,7 @@ Chromy AI: Ask / Task / Repeat ("the extension") is an open-source Chrome extens
 
 ## What the extension stores
 Stored **only on your device** in Chrome's local extension storage (`chrome.storage.local`):
-- Your Google Gemini API key.
+- Your Google Gemini API key, if you add one.
 - Your settings (model, memory size, defaults).
 - Short conversation memory (the last few prompts and answers, default 10 turns). You can clear it at any time or set it to 0.
 - Prompts you save with ★ Save.
@@ -14,12 +14,17 @@ Stored **only on your device** in Chrome's local extension storage (`chrome.stor
 The developer has no server and never receives any of this data.
 
 ## What is sent, and to whom
-When you press **Ask** or **Run**, the extension sends a request to Google's Gemini API (`generativelanguage.googleapis.com`) containing:
+When you press **Ask** or **Run**, the request goes to the first available AI engine:
+- **Chrome on-device AI**: processed entirely on your device by Chrome's built-in model. Nothing leaves your computer.
+- **Ollama**: sent to Ollama running on your own computer (`localhost:11434`). Nothing leaves your computer.
+- **Gemini (cloud)**: sent to Google's Gemini API (`generativelanguage.googleapis.com`), only if you added an API key.
+
+The request contains:
 - your prompt and the recent conversation memory;
 - if you ticked **Use this page**: the title, URL and visible text (or your selection) of the current tab, up to 12,000 characters;
 - if you ticked **Search the web**: a flag asking Gemini to use Google Search grounding.
 
-The request is authenticated with your own API key. Google's handling of this data is governed by the [Gemini API Additional Terms of Service](https://ai.google.dev/gemini-api/terms) and [Google's Privacy Policy](https://policies.google.com/privacy). On free tiers, Google may use API content to improve its products.
+Gemini requests are authenticated with your own API key. Google's handling of this data is governed by the [Gemini API Additional Terms of Service](https://ai.google.dev/gemini-api/terms) and [Google's Privacy Policy](https://policies.google.com/privacy). On free tiers, Google may use API content to improve its products.
 
 ## What the extension does not do
 - No analytics, tracking, ads or telemetry.

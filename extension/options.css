@@ -48,3 +48,11 @@ button, .file { font: inherit; cursor: pointer; }
 .status.ok { color: var(--ok); }
 .status.err { color: var(--error); }
 footer { margin-top: 24px; }
+select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; }
+.engines { list-style: none; padding: 0; margin: 12px 0 8px; display: flex; flex-direction: column; gap: 6px; }
+.engines li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex: none; }
+.dot.ok { background: var(--ok); }
+.dot.off { background: var(--error); }
+.small { padding: 3px 9px; font-size: 12px; }
+code { font: 12px ui-monospace, Consolas, monospace; background: var(--bg); padding: 1px 4px; border-radius: 4px; }

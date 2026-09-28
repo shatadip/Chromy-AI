@@ -16,7 +16,41 @@
     </header>
 
     <section>
-      <h2>Gemini API key</h2>
+      <h2>AI engine</h2>
+      <p class="muted">Chromy tries your preferred engine first, then falls back to any other working one, so you always get an answer. Web search always tries Gemini first.</p>
+      <label class="row">Preferred engine
+        <select id="provider">
+          <option value="auto">Automatic (local first)</option>
+          <option value="builtin">Chrome on-device AI</option>
+          <option value="ollama">Ollama (local)</option>
+          <option value="gemini">Gemini (cloud)</option>
+        </select>
+      </label>
+      <ul class="engines">
+        <li><span class="dot" id="dot-builtin"></span><strong>Chrome on-device AI</strong> <span id="st-builtin" class="muted"></span>
+          <button id="dlBuiltin" type="button" class="ghost small" hidden>Download model</button></li>
+        <li><span class="dot" id="dot-ollama"></span><strong>Ollama</strong> <span id="st-ollama" class="muted"></span></li>
+        <li><span class="dot" id="dot-gemini"></span><strong>Gemini</strong> <span id="st-gemini" class="muted"></span></li>
+      </ul>
+      <button id="refreshEngines" type="button" class="ghost small">Re-check</button>
+    </section>
+
+    <section>
+      <h2>Ollama (free, runs on your computer)</h2>
+      <p class="muted">
+        1. Install from <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">ollama.com/download</a>.
+        2. In a terminal run <code>ollama pull llama3.2:3b</code> (≈2 GB; <code>qwen2.5:1.5b</code> is faster on older PCs).
+        3. Click Connect.
+      </p>
+      <div class="row">
+        <button id="connectOllama" type="button" class="ghost">Connect Ollama</button>
+        <select id="ollamaModel"><option value="">Auto (first installed)</option></select>
+      </div>
+      <p id="ollamaStatus" class="status" role="status"></p>
+    </section>
+
+    <section>
+      <h2>Gemini API key (optional, cloud + web search)</h2>
       <p class="muted">
         Get a free key at
         <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.

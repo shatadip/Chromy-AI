@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Product | Chromy AI — Ask / Task / Repeat (Chrome extension) |
-| Version | 1.0.0 |
+| Version | 1.1.0 |
 | Owner | Shatadip Majumder ([@shatadip](https://github.com/shatadip)) |
 | Status | Approved for v1.0.0 release |
 | License | MIT |
@@ -14,7 +14,7 @@
 This document specifies the requirements for Chromy AI, an open-source Chrome extension that gives short, practical guidance on AI prompts, runs prompts against the current page or the live web, and lets users save prompts to repeat later.
 
 ### 1.2 Scope
-Chromy AI runs entirely in the user's browser. It talks to exactly one remote service, the Google Gemini API, using an API key that the user supplies. There is no Chromy AI backend, no account system and no analytics.
+Chromy AI runs entirely in the user's browser. It answers with the first available of three engines: Chrome's built-in on-device model, Ollama on the user's own computer, or the Google Gemini API with a key the user supplies. There is no Chromy AI backend, no account system and no analytics.
 
 ### 1.3 Definitions
 | Term | Meaning |
@@ -69,7 +69,15 @@ Manifest V3 extension with a toolbar popup, an options page and a background ser
 - **FR-M3** The user can clear memory with one click; setting N to 0 disables memory.
 - **FR-M4** Reopening the popup shows the recent conversation, including an answer that finished while the popup was closed.
 
-### 3.5 Settings
+### 3.5 AI engines and fallback (v1.1)
+- **FR-E1** Supported engines: Chrome on-device AI (Prompt API), Ollama at `localhost:11434`, Gemini API.
+- **FR-E2** Default order: on-device → Ollama → Gemini. The user may choose a preferred engine; the remaining engines stay as fallbacks.
+- **FR-E3** With **Search the web**, Gemini is tried first; if it fails, a local engine answers and the answer is labelled "offline: web search unavailable".
+- **FR-E4** An engine that is missing, not set up, unreachable, rate-limited or erroring is skipped automatically. Only if every engine fails does the user see an error, listing each engine's reason.
+- **FR-E5** Every answer shows which engine (and Ollama model) produced it.
+- **FR-E6** Settings show live status for each engine, a **Connect Ollama** button (requests the optional localhost permission) and a **Download model** button for the on-device model.
+
+### 3.6 Settings
 - **FR-S1** The options page stores the Gemini API key, model id, memory size and default toggles.
 - **FR-S2** The model list can be loaded from the Gemini API; default model is `gemini-flash-latest`.
 - **FR-S3** A **Test key** button validates the key.
@@ -82,9 +90,9 @@ Manifest V3 extension with a toolbar popup, an options page and a background ser
 | NFR-1 | Privacy | No data leaves the browser except requests to `generativelanguage.googleapis.com` made on explicit user action. No telemetry. |
 | NFR-2 | Security | The API key is stored in `chrome.storage.local`, sent only in the `x-goog-api-key` header, never logged or put in URLs. |
 | NFR-3 | Security | Model output is rendered as text (no `innerHTML` of model output); links are restricted to `http(s)`. Strict extension CSP. |
-| NFR-4 | Permissions | Only `storage`, `activeTab`, `scripting`; host permission only for the Gemini API. |
+| NFR-4 | Permissions | `storage`, `activeTab`, `scripting`, `declarativeNetRequestWithHostAccess`; host permission for the Gemini API; `localhost:11434` only as an optional permission. |
 | NFR-5 | Performance | Popup opens in under 200 ms; no external fonts or libraries. |
-| NFR-6 | Reliability | API errors (401/403/429/5xx, network) are shown in plain language; the popup never gets stuck in a loading state. |
+| NFR-6 | Reliability | Engine failures trigger automatic fallback (FR-E4); short Gemini rate limits (≤10 s) are retried once; errors are shown in plain language; the popup never gets stuck in a loading state. |
 | NFR-7 | Accessibility | Keyboard usable (Ctrl/Cmd+Enter runs), labelled controls, respects light/dark mode. |
 | NFR-8 | Maintainability | Plain JS modules, no build step, documented in README. |
 
@@ -99,7 +107,7 @@ Manifest V3 extension with a toolbar popup, an options page and a background ser
 - Releases: owner merges `dev` → `main`, tags `vX.Y.Z`, uploads the zip to the Chrome Web Store.
 
 ## 7. Out of scope (v1)
-- Multiple AI providers, accounts/sync, streaming responses, side panel UI, automatic actions on pages (clicking, form filling), long-term memory.
+- Other cloud providers (OpenAI, Anthropic), accounts/sync, streaming responses, side panel UI, automatic actions on pages (clicking, form filling), long-term memory.
 
 ## 8. Acceptance criteria (v1.0.0)
 1. With a valid key, Ask returns a short critique and an improved prompt that can be copied.
@@ -108,4 +116,5 @@ Manifest V3 extension with a toolbar popup, an options page and a background ser
 4. A saved template re-runs in one click after a browser restart.
 5. A follow-up question uses previous turns; after **Clear memory** it doesn't.
 6. Closing the popup mid-request and reopening shows the finished answer.
-7. The packaged zip loads without errors or warnings in `chrome://extensions`.
+7. With no Gemini key and Ollama running, Ask still answers via Ollama; with Gemini returning 429, Task + Search the web falls back to a local engine.
+8. The packaged zip loads without errors or warnings in `chrome://extensions`.
