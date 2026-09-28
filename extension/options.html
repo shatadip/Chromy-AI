@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Chromy AI Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/icon48.png" alt="" width="40" height="40">
+      <div>
+        <h1>Chromy AI settings</h1>
+        <p class="muted">Ask / Task / Repeat. Everything is stored only in this browser.</p>
+      </div>
+    </header>
+
+    <section>
+      <h2>Gemini API key</h2>
+      <p class="muted">
+        Get a free key at
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+        It's sent only to Google's Gemini API.
+      </p>
+      <div class="row">
+        <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…">
+        <button id="toggleKey" type="button" class="ghost">Show</button>
+        <button id="testKey" type="button" class="ghost">Test key</button>
+      </div>
+      <p id="keyStatus" class="status" role="status"></p>
+    </section>
+
+    <section>
+      <h2>Model</h2>
+      <div class="row">
+        <input id="model" list="modelList" spellcheck="false">
+        <datalist id="modelList"></datalist>
+        <button id="loadModels" type="button" class="ghost">Load models</button>
+      </div>
+      <p class="muted">Default: <code>gemini-flash-latest</code> (fast and inexpensive).</p>
+    </section>
+
+    <section>
+      <h2>Short memory</h2>
+      <label class="row">
+        Remember the last
+        <input id="memorySize" type="number" min="0" max="20" step="1">
+        turns (0 = off)
+      </label>
+      <button id="clearMemory" type="button" class="ghost">Clear memory now</button>
+    </section>
+
+    <section>
+      <h2>Task defaults</h2>
+      <label class="check"><input id="usePageDefault" type="checkbox"> Use the current page by default</label>
+      <label class="check"><input id="searchWebDefault" type="checkbox"> Search the web by default</label>
+      <p class="muted">Web search uses Gemini's Google Search grounding, which Google may bill on paid tiers.</p>
+    </section>
+
+    <section>
+      <h2>Saved prompts (Repeat)</h2>
+      <div class="row">
+        <button id="exportTpl" type="button" class="ghost">Export JSON</button>
+        <label class="ghost file">Import JSON<input id="importTpl" type="file" accept="application/json,.json" hidden></label>
+      </div>
+      <p id="tplStatus" class="status" role="status"></p>
+    </section>
+
+    <div class="save-bar">
+      <button id="save" type="button" class="primary">Save settings</button>
+      <span id="saveStatus" class="status" role="status"></span>
+    </div>
+
+    <footer class="muted">
+      Open source (MIT) ·
+      <a href="https://github.com/shatadip/Chromy-AI" target="_blank" rel="noopener noreferrer">GitHub</a> ·
+      <a href="https://github.com/shatadip/Chromy-AI/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy</a>
+    </footer>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

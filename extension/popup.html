@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Chromy AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <img src="icons/icon32.png" alt="" width="20" height="20">
+      <strong>Chromy AI</strong>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-mode="ask" aria-selected="true" title="Get feedback on a prompt">Ask</button>
+      <button role="tab" data-mode="task" aria-selected="false" title="Run a prompt on this page or the web">Task</button>
+      <button role="tab" data-mode="repeat" aria-selected="false" title="Your saved prompts">Repeat</button>
+    </nav>
+    <button id="openSettings" class="icon-btn" title="Settings" aria-label="Settings">⚙</button>
+  </header>
+
+  <div id="noKey" class="notice" hidden>
+    Add your free Gemini API key to get started.
+    <button id="noKeyBtn" class="link-btn">Open settings</button>
+  </div>
+
+  <main>
+    <section id="thread" class="thread" aria-live="polite"></section>
+
+    <section id="repeatView" class="repeat" hidden>
+      <p class="muted" id="emptyTemplates">No saved prompts yet. Write a prompt in Ask or Task and press ★ Save.</p>
+      <ul id="templateList" class="template-list"></ul>
+    </section>
+
+    <form id="composer" class="composer">
+      <textarea id="prompt" rows="4" placeholder="Paste a prompt to improve…" aria-label="Prompt"></textarea>
+      <div class="toggles" id="taskToggles" hidden>
+        <label><input type="checkbox" id="usePage"> Use this page</label>
+        <label><input type="checkbox" id="searchWeb"> Search the web</label>
+      </div>
+      <div class="actions">
+        <button type="button" id="saveTpl" class="ghost" title="Save as a reusable prompt">★ Save</button>
+        <button type="button" id="clearMem" class="ghost" title="Forget the conversation">Clear memory</button>
+        <button type="submit" id="send" class="primary">Ask <kbd>Ctrl ↵</kbd></button>
+      </div>
+    </form>
+  </main>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

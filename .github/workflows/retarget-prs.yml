@@ -1,0 +1,26 @@
+# Keeps outside contributions off `main`: any PR opened against main by someone
+# other than the repo owner is retargeted to `dev`.
+# Uses pull_request_target but never checks out or runs PR code.
+name: Retarget PRs to dev
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited]
+    branches: [main]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  retarget:
+    if: github.event.pull_request.user.login != github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Change base branch to dev
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr edit "$PR" --repo "$REPO" --base dev
+          gh pr comment "$PR" --repo "$REPO" --body "Thanks for the contribution! 🙌 \`main\` is release-only, so this PR was moved to \`dev\`. See CONTRIBUTING.md."
