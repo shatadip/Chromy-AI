@@ -9,6 +9,7 @@ import {
   ollamaPermitted,
   ollamaModels,
   ollamaGenerate,
+  ollamaWarmup,
   BUILTIN_PAGE_CHARS
 } from './local.js';
 import { getSettings, getMemory, pushMemory } from './store.js';
@@ -77,7 +78,13 @@ const ENGINES = {
       return null;
     },
     async generate(req) {
-      const r = await ollamaGenerate({ ...req, model: req.ollamaModel, userText: withPage(req.prompt, req.page, MAX_PAGE_CHARS) });
+      const r = await ollamaGenerate({
+        ...req,
+        model: req.ollamaModel,
+        userText: withPage(req.prompt, req.page, MAX_PAGE_CHARS),
+        longContext: !!req.page,
+        onPartial: req.onPartial
+      });
       return { ...r, via: `${ENGINE_LABELS.ollama} · ${req.ollamaModel}` };
     }
   },
@@ -111,9 +118,22 @@ export async function runRequest({ prompt, mode, usePage, searchWeb, tabId }) {
   const settings = await getSettings();
   const page = usePage && tabId ? await readActivePage(tabId) : null;
   const history = settings.memorySize > 0 ? (await getMemory()).slice(-settings.memorySize * 2) : [];
-  const req = { settings, prompt, mode, page, history, searchWeb };
+  const pending = { prompt, mode, at: Date.now(), partial: '' };
+  let lastWrite = 0;
+  let finished = false;
+  let writing = Promise.resolve();
+  const onPartial = (text) => {
+    // Throttled so the popup can show the answer as it streams in.
+    if (finished || Date.now() - lastWrite < 250) return;
+    lastWrite = Date.now();
+    writing = chrome.storage.session.set({ pending: { ...pending, partial: text } }).catch(() => {});
+  };
+  const req = { settings, prompt, mode, page, history, searchWeb, onPartial };
 
-  await chrome.storage.session.set({ pending: { prompt, mode, at: Date.now() } }).catch(() => {});
+  // Local models on CPU can take minutes; calling an extension API every 20 s keeps the
+  // service worker from being shut down mid-answer (no-op in the popup).
+  const heartbeat = setInterval(() => chrome.runtime?.getPlatformInfo?.().catch(() => {}), 20000);
+  await chrome.storage.session.set({ pending }).catch(() => {});
   try {
     const failures = [];
     for (const name of engineOrder(settings.provider, searchWeb)) {
@@ -145,6 +165,18 @@ export async function runRequest({ prompt, mode, usePage, searchWeb, tabId }) {
     }
     throw new Error(`No AI engine could answer:\n${failures.join('\n')}\n\nOpen Settings to set one up.`);
   } finally {
+    finished = true;
+    clearInterval(heartbeat);
+    await writing; // a late partial write must not land after the removal below
     await chrome.storage.session.remove('pending').catch(() => {});
   }
+}
+
+/** Preloads the local Ollama model when the popup opens, so the first answer starts sooner. */
+export async function warmup() {
+  const settings = await getSettings();
+  if (settings.provider === 'gemini' || !(await ollamaPermitted())) return;
+  const models = await ollamaModels();
+  const model = models.includes(settings.ollamaModel) ? settings.ollamaModel : models[0];
+  if (model) await ollamaWarmup(model);
 }

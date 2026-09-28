@@ -1,5 +1,5 @@
 // Service worker: runs requests so they finish (and land in memory) even if the popup closes.
-import { runRequest, engineReport } from './lib/engine.js';
+import { runRequest, engineReport, warmup } from './lib/engine.js';
 import { listModels } from './lib/gemini.js';
 import { ollamaModels, ollamaPermitted } from './lib/local.js';
 
@@ -40,6 +40,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const handlers = {
     run: () => runRequest(msg.payload),
     engines: () => engineReport(),
+    warmup: () => warmup(),
     listModels: () => listModels(msg.apiKey),
     ollamaModels: async () => {
       await syncOllamaRule();

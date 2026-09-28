@@ -50,7 +50,8 @@ export async function builtinGenerate({ mode, history, userText }) {
 
 // ---------- Ollama ----------
 
-export const OLLAMA_URL = 'http://localhost:11434';
+// 127.0.0.1, not localhost: Ollama listens on IPv4 only, and localhost may resolve to ::1 first.
+export const OLLAMA_URL = 'http://127.0.0.1:11434';
 export const OLLAMA_ORIGINS = ['http://localhost:11434/*', 'http://127.0.0.1:11434/*'];
 
 export async function ollamaPermitted() {
@@ -86,23 +87,71 @@ export async function ollamaModels() {
   return (body.models || []).map((m) => m.name);
 }
 
-export async function ollamaGenerate({ model, mode, history, userText }) {
-  const body = await ollamaFetch('/api/chat', {
+const KEEP_ALIVE = '30m'; // keep the model in RAM between prompts; CPU-only loads are slow
+
+/** Loads the model into memory ahead of the first prompt (no-op if already loaded). */
+export async function ollamaWarmup(model) {
+  await ollamaFetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      keep_alive: '10m',
-      options: { temperature: mode === 'ask' ? 0.4 : 0.7, num_ctx: 8192 },
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.task },
-        ...history.map((m) => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
-        { role: 'user', content: userText }
-      ]
-    })
+    body: JSON.stringify({ model, keep_alive: KEEP_ALIVE })
   });
-  const text = (body.message?.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+}
+
+/**
+ * Streams the answer so the first bytes arrive quickly (an extension service worker is
+ * killed if a fetch response takes >30 s) and the UI can show text as it's generated.
+ */
+export async function ollamaGenerate({ model, mode, history, userText, longContext, onPartial }) {
+  let res;
+  try {
+    res = await fetch(`${OLLAMA_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        stream: true,
+        keep_alive: KEEP_ALIVE,
+        options: { temperature: mode === 'ask' ? 0.4 : 0.7, num_ctx: longContext ? 8192 : 4096 },
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.task },
+          ...history.map((m) => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
+          { role: 'user', content: userText }
+        ]
+      })
+    });
+  } catch {
+    throw new Error('Ollama is not running on this computer.');
+  }
+  if (res.status === 403) {
+    throw new Error('Ollama blocked the request (403). Set OLLAMA_ORIGINS=chrome-extension://* and restart Ollama.');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Ollama error ${res.status}`);
+  }
+
+  // Response is NDJSON: one {"message":{"content":"..."},"done":bool} object per line.
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let raw = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const chunk = JSON.parse(line);
+      if (chunk.error) throw new Error(chunk.error);
+      raw += chunk.message?.content || '';
+    }
+    onPartial?.(raw);
+  }
+
+  const text = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   if (!text) throw new Error('Ollama returned an empty answer.');
   return { text, sources: [] };
 }

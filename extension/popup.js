@@ -114,7 +114,7 @@ function messageEl(entry) {
   return div;
 }
 
-async function renderThread({ extra = [], typing = false } = {}) {
+async function renderThread({ extra = [], typing = false, partial = '' } = {}) {
   const memory = await getMemory();
   els.thread.replaceChildren();
   if (!memory.length && !extra.length && !typing) {
@@ -130,6 +130,7 @@ async function renderThread({ extra = [], typing = false } = {}) {
   if (typing) {
     const t = document.createElement('div');
     t.className = 'msg model typing';
+    if (partial) t.append(document.createTextNode(`${partial}\n`));
     els.thread.append(t);
   }
   els.thread.scrollTop = els.thread.scrollHeight;
@@ -334,13 +335,20 @@ $('openSettings').addEventListener('click', openSettings);
 $('noKeyBtn').addEventListener('click', openSettings);
 
 // An answer that finishes while the popup was closed/reopened shows up here.
+// Streaming text (Ollama) shows up via the session "pending" record.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.memory && !state.busy && state.mode !== 'repeat') renderThread();
-  if (area === 'session' && changes.pending && !changes.pending.newValue && !state.busy && state.mode !== 'repeat') renderThread();
+  if (state.mode === 'repeat') return;
+  if (area === 'session' && changes.pending) {
+    const p = changes.pending.newValue;
+    if (p) renderThread({ extra: [{ role: 'user', text: p.prompt, mode: p.mode }], typing: true, partial: p.partial });
+    else if (!state.busy) renderThread();
+  }
+  if (area === 'local' && changes.memory && !state.busy) renderThread();
 });
 
 (async function init() {
   const settings = await getSettings();
+  chrome.runtime.sendMessage({ type: 'warmup' }).catch(() => {});
   chrome.runtime.sendMessage({ type: 'engines' }).then(async (res) => {
     const anyReady = (await builtinStatus()) === 'available' || (res?.ok && Object.values(res.data).some((r) => r === null));
     els.noKey.hidden = anyReady;
@@ -351,6 +359,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
   const { pending } = await chrome.storage.session.get('pending');
   if (pending && Date.now() - pending.at < 120000) {
     await setMode(pending.mode);
-    await renderThread({ extra: [{ role: 'user', text: pending.prompt, mode: pending.mode }], typing: true });
+    await renderThread({ extra: [{ role: 'user', text: pending.prompt, mode: pending.mode }], typing: true, partial: pending.partial });
   }
 })();
