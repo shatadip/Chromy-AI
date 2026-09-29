@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Chromy AI - Ask / Task / Repeat",
   "short_name": "Chromy AI",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Free AI prompt coach that runs on your own computer. Score & fix prompts, ask Socrates, run tasks on any page. No key needed.",
   "minimum_chrome_version": "116",
   "action": {

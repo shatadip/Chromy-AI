@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+- **Ask now answers questions.** "What is thiamin?" gets a real answer plus a 💡 prompt tip; prompts meant for another AI ("write a blog post…") still get the score, fixes and a better prompt. One click switches either way ("💬 Just answer it" / "⚡ Coach this prompt").
+- A 💡 tip is always shown for questions (rule-based fallback when a small model forgets it, and inline "Prompt tip:" is detected).
+- **No more blinking while answering:** streaming updates only the text of the reply; the entrance animation plays once per message; scrolling up while it streams is respected.
+- Code blocks are robust to small-model fence mistakes (double-wrapped, nested, unclosed).
+- Questions and prompt coaching keep separate memory, so formats don't bleed into each other.
+
 ## 1.2.0 — "Electrified"
 **Free local AI for everyone**
 - New first-run setup a 10-year-old can finish: Allow → install Ollama (OS-specific button, detected automatically) → Chromy downloads a model sized for your RAM with a progress bar → Say hi. No terminal.

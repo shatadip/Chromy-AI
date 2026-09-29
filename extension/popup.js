@@ -11,7 +11,7 @@ import {
 } from './lib/store.js';
 import { runRequest, engineOrder, ENGINE_LABELS } from './lib/engine.js';
 import { builtinStatus } from './lib/local.js';
-import { QUESTION_IT } from './lib/prompts.js';
+import { QUESTION_IT, splitAnswer } from './lib/prompts.js';
 import { pickQuote, LOADING_LINES, scoreLabel, homeUrl } from './lib/fun.js';
 import { sparks, toast } from './lib/ui.js';
 
@@ -34,8 +34,8 @@ const els = {
 };
 
 const PLACEHOLDERS = {
-  coach: 'Paste a prompt to score & improve…',
-  socrates: 'Paste a prompt; Socrates will question it…',
+  coach: 'Ask anything, or paste a prompt to score & improve…',
+  socrates: 'Ask anything, or paste a prompt for Socrates…',
   task: 'What should I do? e.g. "Summarise this page in 5 bullets"'
 };
 
@@ -81,22 +81,20 @@ function copyButton(getText, label = 'Copy') {
 }
 
 function renderBody(parent, text) {
-  const parts = text.split(/```[\w-]*\n?([\s\S]*?)```/g);
-  parts.forEach((part, i) => {
-    if (i % 2 === 1) {
+  for (const seg of splitAnswer(text)) {
+    if (seg.type === 'code') {
       const pre = document.createElement('pre');
-      const code = part.replace(/\n$/, '');
-      pre.textContent = code;
-      const btn = copyButton(() => code);
+      pre.textContent = seg.value;
+      const btn = copyButton(() => seg.value);
       btn.className = 'copy';
       pre.append(btn);
       parent.append(pre);
-    } else if (part.trim()) {
+    } else {
       const span = document.createElement('span');
-      inlineText(span, part.replace(/^\n+|\n+$/g, ''));
+      inlineText(span, seg.value);
       parent.append(span);
     }
-  });
+  }
 }
 
 function scoreMeter(score) {
@@ -119,7 +117,16 @@ function scoreMeter(score) {
   return wrap;
 }
 
-function messageEl(entry, { last = false } = {}) {
+function actionButton(label, title, onClick) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = label;
+  b.title = title;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function messageEl(entry, { last = false, asked = null } = {}) {
   const div = document.createElement('div');
   div.className = `msg ${entry.role}`;
   const meta = document.createElement('span');
@@ -138,6 +145,13 @@ function messageEl(entry, { last = false } = {}) {
   }
   if (Number.isFinite(entry.score)) div.append(scoreMeter(entry.score));
   renderBody(div, entry.text);
+  if (entry.tip) {
+    const tip = document.createElement('div');
+    tip.className = 'tip';
+    tip.textContent = `💡 ${entry.tip}`;
+    tip.title = 'How to ask this even better next time';
+    div.append(tip);
+  }
   if (entry.sources?.length) {
     const ol = document.createElement('ol');
     ol.className = 'sources';
@@ -158,14 +172,23 @@ function messageEl(entry, { last = false } = {}) {
   actions.className = 'msg-actions';
   actions.append(copyButton(() => entry.text, 'Copy answer'));
   if (last) {
-    const q = document.createElement('button');
-    q.type = 'button';
-    q.textContent = '🤔 Question it';
-    q.title = 'Ask Chromy to examine its own answer for mistakes, like Socrates would';
-    q.addEventListener('click', () =>
-      send({ prompt: QUESTION_IT, mode: entry.mode === 'ask' ? 'ask' : 'task', questionIt: true })
+    actions.append(
+      actionButton('🤔 Question it', 'Ask Chromy to examine its own answer for mistakes, like Socrates would', () =>
+        send({ prompt: QUESTION_IT, mode: entry.mode === 'ask' ? 'ask' : 'task', questionIt: true, askAs: entry.kind })
+      )
     );
-    actions.append(q);
+    // Wrong guess about what you wanted? One click to get the other kind of reply.
+    if (entry.mode === 'ask' && asked) {
+      actions.append(
+        entry.kind === 'question'
+          ? actionButton('⚡ Coach this prompt', 'Score and improve it as a prompt instead of answering it', () =>
+              send({ prompt: asked, mode: 'ask', askAs: 'prompt' })
+            )
+          : actionButton('💬 Just answer it', 'Answer this directly instead of coaching the prompt', () =>
+              send({ prompt: asked, mode: 'ask', askAs: 'question' })
+            )
+      );
+    }
   }
   div.append(actions);
   return div;
@@ -193,8 +216,8 @@ function emptyState() {
   const lines =
     state.mode === 'ask'
       ? state.settings.askStyle === 'socrates'
-        ? ['Paste a prompt; Socrates answers with 3 questions that sharpen it.', 'Switch to ⚡ Coach for a rewritten prompt.']
-        : ['Paste any prompt: get a score, fixes and a better version.', 'Try 🏛 Socrates for questions instead of answers.']
+        ? ['Ask a question: a short answer plus 2 questions to think deeper.', 'Paste a prompt: Socrates asks 3 questions that sharpen it.']
+        : ['Ask a question: get an answer plus a 💡 tip to ask even better.', 'Paste a prompt (e.g. "write a blog post…"): get a score, fixes and a better version.']
       : ['Tick "Use this page" to summarise, explain or extract from the tab you are on.', 'Select text first to work on just that part.'];
   for (const l of [...lines, '🤔 "Question it" makes Chromy check its own answer. Humans make mistakes; so do AIs.']) {
     const li = document.createElement('li');
@@ -205,28 +228,60 @@ function emptyState() {
   return box;
 }
 
+const seen = new Set(); // messages already on screen: only new ones get the entrance animation
+// Your message is keyed by its text (the pending copy and the saved copy must match); replies by time.
+const msgKey = (m) => (m.role === 'user' ? `u:${m.text.split('\n\n📄')[0].slice(0, 80)}` : `${m.role}:${m.at || 'pending'}`);
+const nearBottom = () => els.thread.scrollHeight - els.thread.scrollTop - els.thread.clientHeight < 60;
+
+/** Full render of the conversation. Streaming updates go through updateTyping() instead. */
 async function renderThread({ extra = [], typing = false, partial = '' } = {}) {
   const memory = await getMemory();
+  const stick = nearBottom() || typing;
   els.thread.replaceChildren();
+  state.typingEl = null;
   if (!memory.length && !extra.length && !typing) els.thread.append(emptyState());
   const all = [...memory, ...extra];
   const lastModel = typing ? -1 : all.map((m) => m.role).lastIndexOf('model');
-  all.forEach((m, i) => els.thread.append(messageEl(m, { last: i === lastModel && !state.busy })));
+  all.forEach((m, i) => {
+    const el = messageEl(m, { last: i === lastModel && !state.busy, asked: all[i - 1]?.prompt || null });
+    const key = msgKey(m);
+    if (!seen.has(key)) {
+      el.classList.add('enter');
+      seen.add(key);
+    }
+    els.thread.append(el);
+  });
   if (typing) {
     const t = document.createElement('div');
-    t.className = 'msg model typing';
+    t.className = 'msg model typing enter';
     const meta = document.createElement('span');
     meta.className = 'meta';
     meta.textContent = 'Chromy';
     const line = document.createElement('div');
     line.className = 'line';
     line.textContent = LOADING_LINES[Math.floor(Date.now() / 1800) % LOADING_LINES.length];
-    t.append(meta);
-    if (partial) t.append(document.createTextNode(partial));
-    else t.append(line);
+    const body = document.createElement('div');
+    body.className = 'stream';
+    body.textContent = partial;
+    line.hidden = !!partial;
+    t.append(meta, line, body);
     els.thread.append(t);
+    state.typingEl = t;
   }
-  els.thread.scrollTop = els.thread.scrollHeight;
+  if (stick) els.thread.scrollTop = els.thread.scrollHeight;
+}
+
+/** Streaming: change only the text of the reply being written (no re-render, no flicker). */
+function updateTyping(prompt, mode, partial) {
+  if (!state.typingEl?.isConnected) {
+    renderThread({ extra: [{ role: 'user', text: prompt, mode }], typing: true, partial });
+    return;
+  }
+  const stick = nearBottom();
+  const body = state.typingEl.querySelector('.stream');
+  if (body.textContent !== partial) body.textContent = partial;
+  state.typingEl.querySelector('.line').hidden = !!partial;
+  if (stick) els.thread.scrollTop = els.thread.scrollHeight;
 }
 
 function startLines() {
@@ -305,7 +360,7 @@ async function setMode(mode) {
 
 // ---------- actions ----------
 
-async function send({ prompt, mode, usePage = false, searchWeb = false, questionIt = false }) {
+async function send({ prompt, mode, usePage = false, searchWeb = false, questionIt = false, askAs }) {
   if (state.busy || !prompt.trim()) return;
   state.busy = true;
   els.send.disabled = true;
@@ -315,7 +370,7 @@ async function send({ prompt, mode, usePage = false, searchWeb = false, question
   startLines();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const payload = { prompt, mode, usePage, searchWeb, questionIt, tabId: tab?.id };
+  const payload = { prompt, mode, usePage, searchWeb, questionIt, askAs, tabId: tab?.id };
   // Chrome's built-in model is only guaranteed in window contexts, so when it's ready we run
   // the engine chain here; otherwise the service worker runs it (and finishes if the popup closes).
   const res =
@@ -525,7 +580,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (state.mode === 'repeat') return;
   if (area === 'session' && changes.pending) {
     const p = changes.pending.newValue;
-    if (p) renderThread({ extra: [{ role: 'user', text: p.prompt, mode: p.mode }], typing: true, partial: p.partial });
+    if (p) updateTyping(p.prompt, p.mode, p.partial || '');
     else if (!state.busy) renderThread();
   }
   if (area === 'local' && changes.memory && !state.busy) renderThread();

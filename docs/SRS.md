@@ -85,6 +85,7 @@ Manifest V3 extension: toolbar popup, options page, first-run welcome page and a
 - **FR-W5** The globe pauses off-screen, supports drag-to-spin and hover labels, and is static with reduced motion.
 
 ### 3.5 Ask / Task / Repeat
+- **FR-A0** (1.2.1) Ask classifies each message: a **question** gets a direct answer (80–200 words) plus a 💡 prompt tip (rule-based fallback if the model omits it); a **prompt** meant for another AI gets coached (FR-A1/A2). A one-click switch re-runs the other way. Streaming updates only the reply text (no re-render flicker).
 - **FR-A1** Coach: first line `Score: NN/100`, then verdict, up to 3 fixes, an optional kind "Human touch" note about typos/slips, and an improved prompt in a copyable block. The score is parsed out and shown as an animated meter.
 - **FR-A2** Socrates: score + exactly three probing questions + "Plato's hint"; no rewrite.
 - **FR-A3** "🤔 Question it" on the latest answer asks the engine to examine its own answer for mistakes and correct it.

@@ -15,7 +15,9 @@ const walk = (dir) =>
 
 export function runChecks() {
   const problems = [];
-  const manifest = JSON.parse(readFileSync(join(ext, 'manifest.json'), 'utf8'));
+  const manifestText = readFileSync(join(ext, 'manifest.json'), 'utf8');
+  if (manifestText.charCodeAt(0) === 0xfeff) problems.push('manifest.json starts with a UTF-8 BOM (save without BOM)');
+  const manifest = JSON.parse(manifestText.replace(/^﻿/, ''));
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 
   if (manifest.manifest_version !== 3) problems.push('manifest_version must be 3');

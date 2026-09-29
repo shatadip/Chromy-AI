@@ -158,6 +158,39 @@ try {
     await new Promise((r) => setTimeout(r, 1200)); // let the meter animate
     await popup.screenshot({ path: join(shots, 'popup-ask.png') });
 
+    // A real question in Ask gets answered (not coached), and streaming doesn't rebuild the reply box.
+    await popup.evaluate(() => {
+      window.__flicker = { typingBoxes: 0, streamUpdates: 0 };
+      new MutationObserver((muts) => {
+        for (const m of muts) {
+          for (const n of m.addedNodes) if (n.nodeType === 1 && n.classList.contains('typing')) window.__flicker.typingBoxes++;
+          if (m.target.nodeType === 1 && m.target.classList?.contains('stream')) window.__flicker.streamUpdates++;
+        }
+      }).observe(document.getElementById('thread'), { childList: true, subtree: true, characterData: true });
+    });
+    await popup.type('#prompt', 'What is thiamin? and why the lack of it cause problems in our body?');
+    t = Date.now();
+    await popup.click('#send');
+    await popup.waitForFunction(() => !document.querySelector('.typing') && document.querySelectorAll('.msg.model').length >= 2, { timeout: 300000 });
+    const q = await popup.evaluate(() => {
+      const msgs = document.querySelectorAll('.msg.model');
+      const last = msgs[msgs.length - 1];
+      return {
+        hasScore: !!last.querySelector('.score'),
+        tip: last.querySelector('.tip')?.textContent || null,
+        text: last.textContent.replace(/^CHROMY[^\n]*?qwen[^ ]*/i, '').slice(0, 160),
+        switchBtn: [...last.querySelectorAll('.msg-actions button')].map((b) => b.textContent),
+        flicker: window.__flicker
+      };
+    });
+    if (q.hasScore || /^\s*(Verdict|Score)/i.test(q.text)) throw new Error(`question was coached, not answered: ${q.text}`);
+    if (q.flicker.typingBoxes !== 1) throw new Error(`reply box rebuilt ${q.flicker.typingBoxes} times while streaming (flicker)`);
+    if (!q.switchBtn.some((b) => /Coach this prompt/.test(b))) throw new Error('missing "Coach this prompt" switch');
+    if (!q.tip) throw new Error('question answer has no 💡 prompt tip');
+    ok('popup: question answered, no flicker', `${((Date.now() - t) / 1000).toFixed(0)}s, 1 reply box, ${q.flicker.streamUpdates} text updates, ${q.tip}`);
+    console.log(`   answer: ${q.text.replace(/\s+/g, ' ').slice(0, 140)}…`);
+    await popup.screenshot({ path: join(shots, 'popup-question.png') });
+
     // Socrates style.
     await popup.click('[data-style="socrates"]');
     await popup.type('#prompt', 'make me a logo');

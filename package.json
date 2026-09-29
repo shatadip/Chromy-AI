@@ -1,6 +1,6 @@
 {
   "name": "chromy-ai",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Chromy AI - Ask / Task / Repeat. Dev tooling only; the extension itself has no build step.",
   "type": "module",

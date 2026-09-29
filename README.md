@@ -16,7 +16,8 @@ Score and fix any prompt, let Socrates question it, run it on the page you're re
 
 ## Why people like it
 
-- **⚡ Prompt score (0-100)** with up to 3 concrete fixes and a better prompt you can copy.
+- **💬 Ask anything:** questions get a straight answer plus a 💡 tip on how to ask even better.
+- **⚡ Prompt score (0-100)** for prompts you'll send to an AI, with up to 3 concrete fixes and a better prompt you can copy.
 - **🏛 Socrates mode:** three sharp questions instead of answers, so you find out what you actually want.
 - **🤔 Question it:** one click makes the AI examine its own answer for mistakes. Humans make mistakes; so do AIs.
 - **📄 Task on any page:** summarise, explain like I'm 12, extract, or humanize text, on the tab you're reading.

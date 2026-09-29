@@ -15,7 +15,7 @@ import {
   BUILTIN_PAGE_CHARS
 } from './local.js';
 import { anthropicGenerate, anthropicPermitted, openaiGenerate, openaiPermitted } from './cloud.js';
-import { systemPromptFor, extractScore, formatReminder, tidyAnswer } from './prompts.js';
+import { systemPromptFor, extractScore, extractTip, quickTip, formatReminder, tidyAnswer, classifyAsk } from './prompts.js';
 import { getSettings, getMemory, pushMemory, bumpStats } from './store.js';
 
 const MAX_PAGE_CHARS = 12000;
@@ -174,16 +174,20 @@ export async function engineReport() {
  * @param {boolean} [payload.searchWeb]
  * @param {number} [payload.tabId]
  * @param {boolean} [payload.questionIt] "Question it" follow-up: shown shorter in the thread
+ * @param {'question'|'prompt'} [payload.askAs] force how an Ask message is treated
  */
-export async function runRequest({ prompt, mode, usePage, searchWeb, tabId, questionIt }) {
+export async function runRequest({ prompt, mode, usePage, searchWeb, tabId, questionIt, askAs }) {
   const settings = await getSettings();
   const page = usePage && tabId ? await readActivePage(tabId) : null;
-  // Each mode remembers its own conversation: coaching turns would otherwise teach small models
-  // to answer tasks in "Score / Verdict" format (and vice versa).
-  const history =
-    settings.memorySize > 0 ? (await getMemory()).filter((m) => m.mode === mode).slice(-settings.memorySize * 2) : [];
   const style = mode === 'ask' && !questionIt ? settings.askStyle : null;
-  const system = systemPromptFor(questionIt ? 'task' : mode, style);
+  // Ask either answers a question or coaches a prompt; the user can force either with askAs.
+  const kind = mode === 'ask' ? (askAs === 'question' || askAs === 'prompt' ? askAs : classifyAsk(prompt)) : null;
+  // Each kind of conversation remembers only its own turns: coaching turns would otherwise teach
+  // small models to answer questions in "Score / Verdict" format (and vice versa).
+  const sameThread = (m) => m.mode === mode && (mode !== 'ask' || (m.kind || 'prompt') === kind);
+  const history =
+    settings.memorySize > 0 ? (await getMemory()).filter(sameThread).slice(-settings.memorySize * 2) : [];
+  const system = systemPromptFor(questionIt ? 'task' : mode, style, kind);
 
   const pending = { prompt: questionIt ? '🤔 Question it' : prompt, mode, at: Date.now(), partial: '' };
   let lastWrite = 0;
@@ -197,13 +201,13 @@ export async function runRequest({ prompt, mode, usePage, searchWeb, tabId, ques
   };
   const req = {
     settings,
-    prompt: prompt + (style ? formatReminder(mode, style) : ''),
+    prompt: prompt + (style ? formatReminder(mode, style, kind) : ''),
     mode,
     page,
     history,
     searchWeb,
     system,
-    temperature: mode === 'ask' ? 0.4 : 0.7,
+    temperature: kind === 'prompt' ? 0.4 : kind === 'question' ? 0.5 : 0.7,
     onPartial
   };
 
@@ -229,18 +233,25 @@ export async function runRequest({ prompt, mode, usePage, searchWeb, tabId, ques
       }
       if (searchWeb && !WEB_ENGINES.includes(name)) result.via += ' (offline: no web search)';
 
-      const { score, text } = mode === 'ask' && !questionIt ? extractScore(tidyAnswer(result.text)) : { score: null, text: result.text };
+      let text = result.text;
+      let score = null;
+      let tip = null;
+      if (kind === 'prompt' && !questionIt) ({ score, text } = extractScore(tidyAnswer(text)));
+      if (kind === 'question' && !questionIt) {
+        ({ tip, text } = extractTip(text));
+        tip ||= quickTip(prompt); // small models often skip the tip line; guidance must not depend on it
+      }
       const now = Date.now();
       const shownPrompt = page ? `${pending.prompt}\n\n📄 ${page.selection ? 'Selection from ' : ''}${page.title}` : pending.prompt;
       await pushMemory(
         [
-          { role: 'user', text: shownPrompt, mode, at: now },
-          { role: 'model', text, mode, sources: result.sources, via: result.via, score, at: now }
+          { role: 'user', text: shownPrompt, prompt: questionIt ? null : prompt, mode, kind, at: now },
+          { role: 'model', text, mode, kind, sources: result.sources, via: result.via, score, tip, at: now }
         ],
         Math.max(settings.memorySize, 1) // always keep the latest turn so the popup can show it
       );
       const stats = await bumpStats().catch(() => null);
-      return { ...result, text, score, stats };
+      return { ...result, text, score, tip, kind, stats };
     }
     throw new Error(`No AI engine could answer:\n${failures.join('\n')}\n\nOpen Settings → "Set up free local AI" to fix this in two clicks.`);
   } finally {
