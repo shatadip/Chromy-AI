@@ -139,6 +139,19 @@ try {
   await popup.goto(url('popup.html'));
   await popup.waitForFunction(() => /Answering with/.test(document.getElementById('engineLine').textContent), { timeout: 20000 });
   ok('popup: engine line', await popup.$eval('#engineLine', (e) => e.textContent));
+
+  // Update UX: after an automatic update the popup says so once; options explains folder installs.
+  await popup.evaluate(() => chrome.storage.local.set({ justUpdated: { from: '1.2.1', to: '1.2.2', at: Date.now() } }));
+  await popup.reload();
+  await popup.waitForSelector('#updated:not([hidden])', { timeout: 5000 });
+  const updatedText = await popup.$eval('#updatedText', (e) => e.textContent);
+  await popup.click('#updatedClose');
+  const cleared = await popup.evaluate(async () => !(await chrome.storage.local.get('justUpdated')).justUpdated);
+  if (!cleared) throw new Error('update banner did not clear');
+  const versionLine = await options.$eval('#versionLine', (e) => e.textContent);
+  if (!/loaded from a folder/.test(versionLine)) throw new Error(`unexpected version line: ${versionLine}`);
+  ok('updates: banner shown once + folder-install notice', updatedText);
+  await popup.waitForFunction(() => /Answering with/.test(document.getElementById('engineLine').textContent), { timeout: 20000 });
   await popup.screenshot({ path: join(shots, 'popup-empty.png') });
 
   if (!process.env.E2E_SKIP_SLOW) {

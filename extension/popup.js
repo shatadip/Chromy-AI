@@ -533,6 +533,21 @@ const dismissNudge = () => {
 $('nudgeClose').addEventListener('click', dismissNudge);
 $('rateLink').addEventListener('click', dismissNudge);
 
+/** One-time "Updated to vX" note after an automatic update. */
+async function showUpdatedBanner() {
+  const { justUpdated } = await chrome.storage.local.get('justUpdated');
+  if (!justUpdated) return;
+  $('updatedText').textContent = `Updated to v${justUpdated.to} ⚡ (from v${justUpdated.from})`;
+  $('updatedLink').href = `https://github.com/shatadip/Chromy-AI/releases/tag/v${justUpdated.to}`;
+  $('updated').hidden = false;
+  const done = () => {
+    $('updated').hidden = true;
+    chrome.storage.local.remove('justUpdated');
+  };
+  $('updatedClose').addEventListener('click', done, { once: true });
+  $('updatedLink').addEventListener('click', done, { once: true });
+}
+
 // ---------- wiring ----------
 
 els.tabs.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
@@ -589,6 +604,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
 (async function init() {
   state.settings = await getSettings();
   chrome.runtime.sendMessage({ type: 'warmup' }).catch(() => {});
+  chrome.runtime.sendMessage({ type: 'checkForUpdate' }).catch(() => {});
+  showUpdatedBanner();
   refreshEngineLine();
   getStats().then(renderStreak);
   els.usePage.checked = state.settings.usePageDefault;

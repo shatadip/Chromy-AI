@@ -308,6 +308,36 @@ async function initShare() {
     : 'Share Chromy with a friend who writes a lot of prompts.';
 }
 
+// ---------- updates ----------
+
+async function initUpdates() {
+  const version = chrome.runtime.getManifest().version;
+  let fromStore = false;
+  try {
+    fromStore = (await chrome.management.getSelf()).installType === 'normal';
+  } catch {
+    /* unavailable in previews */
+  }
+  $('versionLine').textContent = fromStore
+    ? `Version ${version}. Updates install automatically from the Chrome Web Store, as soon as Chromy is idle.`
+    : `Version ${version} (loaded from a folder). Chrome doesn't auto-update folder installs: pull the latest code and click ↻ on chrome://extensions, or install from the Chrome Web Store to get automatic updates.`;
+  $('checkUpdate').hidden = !fromStore;
+}
+
+$('checkUpdate').addEventListener('click', async () => {
+  const el = $('updateStatus');
+  el.textContent = 'Checking…';
+  el.className = 'status small ok';
+  const res = await chrome.runtime.sendMessage({ type: 'checkForUpdate', force: true }).catch(() => null);
+  const r = res?.ok ? res.data : { status: 'error' };
+  el.textContent = {
+    update_available: `v${r.version} found: installing as soon as Chromy is idle ⚡`,
+    no_update: "You're on the latest version ✓",
+    throttled: 'Chrome checked very recently. It will check again automatically soon.'
+  }[r.status] || `Couldn't check right now (${r.error || r.status}).`;
+  el.className = `status small ${r.status === 'error' ? 'err' : 'ok'}`;
+});
+
 // ---------- boot ----------
 
 fillForm();
@@ -315,6 +345,7 @@ refreshEngines();
 refreshOllama();
 refreshBuiltin();
 initShare();
+initUpdates();
 mountWorld($('world')).catch(() => ($('world').hidden = true));
 if (location.hash === '#advanced') {
   $('advanced').open = true;

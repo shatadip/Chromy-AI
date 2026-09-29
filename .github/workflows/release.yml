@@ -1,0 +1,76 @@
+# Push a new version to main → test → GitHub Release (zip) → Chrome Web Store upload + publish.
+# After Google's review, every store install updates itself automatically.
+# A push that doesn't change the manifest version is ignored (the store requires a higher version).
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: ['extension/**', 'package.json', 'CHANGELOG.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: v
+        run: |
+          V=$(node -p "require('./extension/manifest.json').version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::v$V is already released. Bump the version (npm run release) to ship an update."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.v.outputs.exists == 'false'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Test and package
+        if: steps.v.outputs.exists == 'false'
+        run: |
+          npm ci
+          npm test
+          node scripts/check.mjs
+          node scripts/package.mjs
+
+      - name: GitHub Release
+        if: steps.v.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; import {changelogSection} from './scripts/release.mjs'; process.stdout.write(changelogSection(readFileSync('CHANGELOG.md','utf8'), process.env.V) || 'See CHANGELOG.md')" > notes.md
+          gh release create "v$V" "dist/chromy-ai-v$V.zip" --title "Chromy AI v$V" --notes-file notes.md --target "$GITHUB_SHA"
+
+      - name: Publish to Chrome Web Store
+        if: steps.v.outputs.exists == 'false'
+        env:
+          CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CWS_SERVICE_ACCOUNT_JSON: ${{ secrets.CWS_SERVICE_ACCOUNT_JSON }}
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          if [ -z "$CWS_EXTENSION_ID" ] || [ -z "$CWS_PUBLISHER_ID" ]; then
+            echo "::warning::Chrome Web Store secrets not set yet; skipped store publish. See docs/RELEASING.md."
+            exit 0
+          fi
+          node scripts/cws-publish.mjs "dist/chromy-ai-v${{ steps.v.outputs.version }}.zip"

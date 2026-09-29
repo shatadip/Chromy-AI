@@ -93,6 +93,8 @@ docs/SRS.md          requirements
 stats/countries.json public aggregate install stats (feeds the globe)
 ```
 
+**Shipping updates:** `npm run release` bumps the version and pushes; GitHub Actions publishes to the Chrome Web Store and every store install updates itself. One-time setup: [docs/RELEASING.md](docs/RELEASING.md).
+
 To refresh the globe: export "users by region" CSV from the Chrome Web Store dashboard, run `node scripts/update-stats.mjs export.csv`, commit.
 
 ## Contributing
