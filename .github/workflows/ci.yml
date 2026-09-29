@@ -1,0 +1,30 @@
+# Unit tests + static release checks + package build on every push and pull request.
+# (The real-browser e2e test needs Ollama, so it runs locally: node scripts/e2e.mjs)
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node scripts/check.mjs
+      - run: node scripts/package.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chromy-ai-extension
+          path: dist/*.zip

@@ -3,48 +3,68 @@
 <head>
   <meta charset="utf-8">
   <title>Chromy AI</title>
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <header class="top">
     <div class="brand">
-      <img src="icons/icon32.png" alt="" width="20" height="20">
-      <strong>Chromy AI</strong>
+      <span class="bolt" id="bolt">⚡</span>
+      <strong>Chromy</strong>
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" data-mode="ask" aria-selected="true" title="Get feedback on a prompt">Ask</button>
+      <button role="tab" data-mode="ask" aria-selected="true" title="Score and improve a prompt">Ask</button>
       <button role="tab" data-mode="task" aria-selected="false" title="Run a prompt on this page or the web">Task</button>
       <button role="tab" data-mode="repeat" aria-selected="false" title="Your saved prompts">Repeat</button>
     </nav>
     <button id="openSettings" class="icon-btn" title="Settings" aria-label="Settings">⚙</button>
   </header>
 
-  <div id="noKey" class="notice" hidden>
-    No AI engine is set up yet. Connect local Ollama or add a free Gemini key.
-    <button id="noKeyBtn" class="link-btn">Open settings</button>
+  <div id="setupNotice" class="notice" hidden>
+    <span id="setupText">No AI connected yet. Free local AI takes 2 minutes.</span>
+    <button id="setupBtn" class="btn-electric small">Set it up</button>
+    <button id="setupClose" class="icon-btn" aria-label="Not now" hidden>✕</button>
+  </div>
+
+  <div id="nudge" class="notice nudge" hidden>
+    <span>Enjoying Chromy? A quick ⭐ helps it spread.</span>
+    <a id="rateLink" class="btn-electric small" target="_blank" rel="noopener noreferrer">Rate</a>
+    <button id="nudgeClose" class="icon-btn" aria-label="Dismiss">✕</button>
   </div>
 
   <main>
     <section id="thread" class="thread" aria-live="polite"></section>
 
     <section id="repeatView" class="repeat" hidden>
-      <p class="muted" id="emptyTemplates">No saved prompts yet. Write a prompt in Ask or Task and press ★ Save.</p>
+      <div id="emptyTemplates" class="empty">
+        <p>No saved prompts yet. Write one in Ask or Task and press <strong>★ Save</strong>.</p>
+        <button id="addStarters" class="btn-ghost">Add 4 starter prompts</button>
+      </div>
       <ul id="templateList" class="template-list"></ul>
     </section>
 
     <form id="composer" class="composer">
-      <textarea id="prompt" rows="4" placeholder="Paste a prompt to improve…" aria-label="Prompt"></textarea>
+      <div class="style-switch" id="styleSwitch" role="radiogroup" aria-label="Ask style">
+        <button type="button" role="radio" data-style="coach" aria-checked="true">⚡ Coach</button>
+        <button type="button" role="radio" data-style="socrates" aria-checked="false">🏛 Socrates</button>
+      </div>
+      <textarea id="prompt" rows="3" placeholder="Paste a prompt to score & improve…" aria-label="Prompt"></textarea>
       <div class="toggles" id="taskToggles" hidden>
         <label><input type="checkbox" id="usePage"> Use this page</label>
         <label><input type="checkbox" id="searchWeb"> Search the web</label>
       </div>
       <div class="actions">
-        <button type="button" id="saveTpl" class="ghost" title="Save as a reusable prompt">★ Save</button>
-        <button type="button" id="clearMem" class="ghost" title="Forget the conversation">Clear memory</button>
-        <button type="submit" id="send" class="primary">Ask <kbd>Ctrl ↵</kbd></button>
+        <button type="button" id="saveTpl" class="btn-ghost small" title="Save as a reusable prompt">★ Save</button>
+        <button type="button" id="clearMem" class="btn-ghost small" title="Forget the conversation">Clear</button>
+        <button type="submit" id="send" class="btn-electric">Ask <kbd>Ctrl ↵</kbd></button>
       </div>
     </form>
   </main>
+
+  <footer class="foot">
+    <span id="engineLine" class="engine-line"></span>
+    <span id="streak" class="streak" title="Your local streak. Never leaves your computer."></span>
+  </footer>
 
   <script type="module" src="popup.js"></script>
 </body>

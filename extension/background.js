@@ -1,7 +1,6 @@
 // Service worker: runs requests so they finish (and land in memory) even if the popup closes.
 import { runRequest, engineReport, warmup } from './lib/engine.js';
-import { listModels } from './lib/gemini.js';
-import { ollamaModels, ollamaPermitted } from './lib/local.js';
+import { ollamaPermitted } from './lib/local.js';
 
 // Ollama rejects requests carrying a chrome-extension:// Origin unless OLLAMA_ORIGINS is set.
 // Strip the Origin header on our own requests to the local Ollama port (only once the user
@@ -28,9 +27,9 @@ async function syncOllamaRule() {
   });
 }
 
-chrome.runtime.onInstalled.addListener(({ reason }) => {
-  syncOllamaRule();
-  if (reason === 'install') chrome.runtime.openOptionsPage();
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+  await syncOllamaRule();
+  if (reason === 'install') chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
 });
 chrome.runtime.onStartup.addListener(syncOllamaRule);
 chrome.permissions.onAdded.addListener(syncOllamaRule);
@@ -41,11 +40,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     run: () => runRequest(msg.payload),
     engines: () => engineReport(),
     warmup: () => warmup(),
-    listModels: () => listModels(msg.apiKey),
-    ollamaModels: async () => {
-      await syncOllamaRule();
-      return ollamaModels();
-    }
+    syncOllamaRule: () => syncOllamaRule()
   };
   const handler = handlers[msg?.type];
   if (!handler) return false;

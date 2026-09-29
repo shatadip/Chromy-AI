@@ -1,58 +1,59 @@
-:root {
-  --bg: #f6f7fb;
-  --card: #ffffff;
-  --text: #1b1d2a;
-  --muted: #62667a;
-  --border: #dfe1ec;
-  --accent: #5b4bff;
-  --accent-2: #19b8d4;
-  --ok: #188a4a;
-  --error: #c62843;
-  color-scheme: light dark;
+body { background: var(--bg-2); font-size: 14px; }
+main { max-width: 700px; margin: 0 auto; padding: 32px 16px 48px; }
+.top { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
+h1 { font-size: 24px; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 16px; margin: 0 0 10px; display: inline-flex; align-items: center; gap: 8px; }
+h3 { font-size: 14px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+h3 a { font-weight: 400; margin-left: auto; }
+p { margin: 4px 0; }
+.small { font-size: 12.5px; }
+.muted { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+.pill { font-size: 11px; font-weight: 650; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 8px; }
+.sub { padding: 12px 0; border-top: 1px dashed var(--border); }
+.sub:first-of-type { border-top: 0; padding-top: 0; }
+.card > h2 + .sub { border-top: 0; padding-top: 4px; }
+
+input[type="password"], input[type="text"], input[type="number"], select {
+  padding: 7px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111219;
-    --card: #1b1c27;
-    --text: #e9eaf2;
-    --muted: #9a9db3;
-    --border: #2d3044;
-    --accent: #7d70ff;
-    --ok: #4fd18b;
-    --error: #ff6b82;
-  }
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-main { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
-header { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; }
-h1 { font-size: 22px; margin: 0; }
-h2 { font-size: 15px; margin: 0 0 6px; }
-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-.muted { color: var(--muted); font-size: 13px; margin: 4px 0; }
-a { color: var(--accent); }
-.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-input[type="password"], input[type="text"], input:not([type]), input[type="number"] {
-  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit;
-}
-#apiKey, #model { flex: 1; min-width: 200px; }
-#memorySize { width: 70px; }
-.check { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
-button, .file { font: inherit; cursor: pointer; }
-.ghost { border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 8px; padding: 6px 12px; }
-#clearMemory { margin-top: 10px; }
-.primary { border: 0; border-radius: 8px; padding: 9px 20px; font-weight: 600; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
-.save-bar { display: flex; gap: 12px; align-items: center; margin: 18px 0; }
-.status { font-size: 13px; margin: 6px 0 0; min-height: 1em; }
+input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); outline: none; }
+.key input[type="password"], .key input[type="text"] { flex: 1; min-width: 200px; }
+select { max-width: 100%; min-width: 220px; }
+#memorySize { width: 64px; }
+.check { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+.small-btn { padding: 4px 10px; font-size: 12.5px; text-decoration: none; }
+.file { cursor: pointer; }
+.status { min-height: 1.2em; margin: 4px 0 0; }
 .status.ok { color: var(--ok); }
-.status.err { color: var(--error); }
-footer { margin-top: 24px; }
-select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; }
-.engines { list-style: none; padding: 0; margin: 12px 0 8px; display: flex; flex-direction: column; gap: 6px; }
-.engines li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex: none; }
-.dot.ok { background: var(--ok); }
-.dot.off { background: var(--error); }
-.small { padding: 3px 9px; font-size: 12px; }
-code { font: 12px ui-monospace, Consolas, monospace; background: var(--bg); padding: 1px 4px; border-radius: 4px; }
+.status.err { color: var(--error); white-space: pre-wrap; }
+
+.hero { box-shadow: var(--glow); }
+.now { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.now .bolt { width: 36px; height: 36px; font-size: 18px; border-radius: 11px; }
+.now-title { font-size: 17px; font-weight: 700; }
+.now #setupBtn { margin-left: auto; text-decoration: none; }
+.engines { list-style: none; padding: 0; margin: 14px 0 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px 14px; }
+.engines li strong { white-space: nowrap; }
+.engines li { display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+.engines li .dot { transform: translateY(1px); }
+.engines li span.reason { color: var(--muted); font-size: 12px; }
+
+.seg { display: grid; gap: 6px; margin-bottom: 10px; }
+.seg label { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; }
+.seg label:has(input:checked) { border-color: var(--accent); box-shadow: var(--glow); }
+.seg .muted { font-size: 12px; }
+
+details.card summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+details.card summary::-webkit-details-marker { display: none; }
+details.card summary h2 { margin: 0; }
+details.card summary h2::before { content: "▸"; color: var(--muted); transition: transform 0.2s var(--ease); display: inline-block; }
+details[open].card summary h2::before { transform: rotate(90deg); }
+details.card[open] summary { margin-bottom: 8px; }
+
+.world h2 { display: flex; justify-content: center; }
+.world-wrap { position: relative; max-width: 340px; margin: 0 auto; }
+.share a { text-decoration: none; }
+footer { text-align: center; margin-top: 24px; }

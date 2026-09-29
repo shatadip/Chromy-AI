@@ -1,5 +1,6 @@
 dist/
 node_modules/
+store/raw/
 .DS_Store
 Thumbs.db
 *.pem

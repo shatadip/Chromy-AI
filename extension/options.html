@@ -2,113 +2,161 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chromy AI Settings</title>
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <main>
-    <header>
-      <img src="icons/icon48.png" alt="" width="40" height="40">
+    <header class="top">
+      <img src="icons/icon48.png" alt="" width="44" height="44">
       <div>
-        <h1>Chromy AI settings</h1>
-        <p class="muted">Ask / Task / Repeat. Everything is stored only in this browser.</p>
+        <h1>Chromy AI</h1>
+        <p class="muted">Ask / Task / Repeat. Settings save automatically and stay on this device.</p>
       </div>
     </header>
 
-    <section>
-      <h2>AI engine</h2>
-      <p class="muted">Chromy tries your preferred engine first, then falls back to any other working one, so you always get an answer. Web search always tries Gemini first.</p>
-      <label class="row">Preferred engine
+    <!-- Who answers -->
+    <section class="card hero" aria-live="polite">
+      <div class="now">
+        <span class="bolt" id="nowBolt">⚡</span>
+        <div>
+          <div class="now-title" id="nowTitle">Checking your AI…</div>
+          <div class="muted small" id="nowSub"></div>
+        </div>
+        <a id="setupBtn" class="btn-electric" href="welcome.html" hidden>Set up free local AI (2 min)</a>
+      </div>
+      <ul class="engines" id="engines"></ul>
+      <label class="row small">Preferred engine
         <select id="provider">
-          <option value="auto">Automatic (local first)</option>
+          <option value="auto">Automatic (free local AI first)</option>
           <option value="builtin">Chrome on-device AI</option>
           <option value="ollama">Ollama (local)</option>
-          <option value="gemini">Gemini (cloud)</option>
+          <option value="gemini">Gemini (your key)</option>
+          <option value="anthropic">Claude (your key)</option>
+          <option value="openai">OpenAI (your key)</option>
         </select>
       </label>
-      <ul class="engines">
-        <li><span class="dot" id="dot-builtin"></span><strong>Chrome on-device AI</strong> <span id="st-builtin" class="muted"></span>
-          <button id="dlBuiltin" type="button" class="ghost small" hidden>Download model</button></li>
-        <li><span class="dot" id="dot-ollama"></span><strong>Ollama</strong> <span id="st-ollama" class="muted"></span></li>
-        <li><span class="dot" id="dot-gemini"></span><strong>Gemini</strong> <span id="st-gemini" class="muted"></span></li>
-      </ul>
-      <button id="refreshEngines" type="button" class="ghost small">Re-check</button>
+      <p class="muted small">If your preferred engine can't answer, Chromy quietly falls back to the next one that can.</p>
     </section>
 
-    <section>
-      <h2>Ollama (free, runs on your computer)</h2>
-      <p class="muted">
-        1. Install from <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">ollama.com/download</a>.
-        2. In a terminal run <code>ollama pull llama3.2:3b</code> (≈2 GB; <code>qwen2.5:1.5b</code> is faster on older PCs).
-        3. Click Connect.
-      </p>
-      <div class="row">
-        <button id="connectOllama" type="button" class="ghost">Connect Ollama</button>
-        <select id="ollamaModel"><option value="">Auto (first installed)</option></select>
+    <!-- Local AI -->
+    <section class="card">
+      <h2>Free local AI <span class="pill">recommended</span></h2>
+      <div class="sub">
+        <h3><span class="dot" id="dot-ollama"></span> Ollama</h3>
+        <p class="muted small" id="ollamaStatus">Checking…</p>
+        <div class="row">
+          <label for="ollamaModel" class="small">Brain</label>
+          <select id="ollamaModel"></select>
+          <button id="connectOllama" class="btn-ghost" hidden>Connect</button>
+          <a class="btn-ghost small-btn" href="welcome.html">Get more brains</a>
+        </div>
+        <p class="muted small" id="ollamaAutoNote"></p>
       </div>
-      <p id="ollamaStatus" class="status" role="status"></p>
-    </section>
-
-    <section>
-      <h2>Gemini API key (optional, cloud + web search)</h2>
-      <p class="muted">
-        Get a free key at
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
-        It's sent only to Google's Gemini API.
-      </p>
-      <div class="row">
-        <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…">
-        <button id="toggleKey" type="button" class="ghost">Show</button>
-        <button id="testKey" type="button" class="ghost">Test key</button>
+      <div class="sub">
+        <h3><span class="dot" id="dot-builtin"></span> Chrome on-device AI</h3>
+        <p class="muted small" id="builtinStatus">Checking…</p>
+        <button id="dlBuiltin" class="btn-ghost" hidden>Download Chrome's model</button>
       </div>
-      <p id="keyStatus" class="status" role="status"></p>
     </section>
 
-    <section>
-      <h2>Model</h2>
-      <div class="row">
-        <input id="model" list="modelList" spellcheck="false">
-        <datalist id="modelList"></datalist>
-        <button id="loadModels" type="button" class="ghost">Load models</button>
+    <!-- Style -->
+    <section class="card">
+      <h2>Chromy's style</h2>
+      <div class="seg" role="radiogroup" aria-label="Ask style">
+        <label><input type="radio" name="askStyle" value="coach"> ⚡ Coach <span class="muted">score, fixes & a better prompt</span></label>
+        <label><input type="radio" name="askStyle" value="socrates"> 🏛 Socrates <span class="muted">questions that make you think</span></label>
       </div>
-      <p class="muted">Default: <code>gemini-flash-latest</code> (fast and inexpensive).</p>
-    </section>
-
-    <section>
-      <h2>Short memory</h2>
-      <label class="row">
-        Remember the last
+      <label class="check"><input type="checkbox" id="effects"> Sparks & glow effects</label>
+      <label class="row small">Remember the last
         <input id="memorySize" type="number" min="0" max="20" step="1">
-        turns (0 = off)
+        turns (0 = forget everything)
+        <button id="clearMemory" class="btn-ghost small-btn" type="button">Clear memory now</button>
       </label>
-      <button id="clearMemory" type="button" class="ghost">Clear memory now</button>
+      <label class="check"><input id="usePageDefault" type="checkbox"> Task: use the current page by default</label>
+      <label class="check"><input id="searchWebDefault" type="checkbox"> Task: search the web by default (needs a Gemini or Claude key)</label>
     </section>
 
-    <section>
-      <h2>Task defaults</h2>
-      <label class="check"><input id="usePageDefault" type="checkbox"> Use the current page by default</label>
-      <label class="check"><input id="searchWebDefault" type="checkbox"> Search the web by default</label>
-      <p class="muted">Web search uses Gemini's Google Search grounding, which Google may bill on paid tiers.</p>
-    </section>
+    <!-- Advanced: keys -->
+    <details class="card" id="advanced">
+      <summary><h2>Advanced: use your own API keys</h2><span class="muted small">Gemini · Claude · OpenAI</span></summary>
+      <p class="muted small">Keys are stored only in this browser and sent only to that provider. Cloud engines are used when local AI can't answer, or first if you pick them above. Web search needs Gemini or Claude.</p>
 
-    <section>
+      <div class="sub key" data-provider="gemini">
+        <h3><span class="dot" id="dot-gemini"></span> Google Gemini <a class="small" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">get a free key</a></h3>
+        <div class="row">
+          <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" aria-label="Gemini API key">
+          <button class="btn-ghost reveal" data-for="apiKey" type="button">Show</button>
+          <button class="btn-electric connect" data-engine="gemini" type="button">Connect</button>
+        </div>
+        <div class="row"><label class="small" for="model">Model</label><select id="model"></select></div>
+        <p class="status small" data-status="gemini" role="status"></p>
+      </div>
+
+      <div class="sub key" data-provider="anthropic">
+        <h3><span class="dot" id="dot-anthropic"></span> Anthropic Claude <a class="small" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">get a key</a></h3>
+        <div class="row">
+          <input id="anthropicKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" aria-label="Claude API key">
+          <button class="btn-ghost reveal" data-for="anthropicKey" type="button">Show</button>
+          <button class="btn-electric connect" data-engine="anthropic" type="button">Connect</button>
+        </div>
+        <div class="row"><label class="small" for="anthropicModel">Model</label><select id="anthropicModel"></select></div>
+        <p class="status small" data-status="anthropic" role="status"></p>
+      </div>
+
+      <div class="sub key" data-provider="openai">
+        <h3><span class="dot" id="dot-openai"></span> OpenAI <a class="small" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">get a key</a></h3>
+        <div class="row">
+          <input id="openaiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…" aria-label="OpenAI API key">
+          <button class="btn-ghost reveal" data-for="openaiKey" type="button">Show</button>
+          <button class="btn-electric connect" data-engine="openai" type="button">Connect</button>
+        </div>
+        <div class="row"><label class="small" for="openaiModel">Model</label><select id="openaiModel"></select></div>
+        <p class="status small" data-status="openai" role="status"></p>
+      </div>
+    </details>
+
+    <!-- Saved prompts -->
+    <section class="card">
       <h2>Saved prompts (Repeat)</h2>
       <div class="row">
-        <button id="exportTpl" type="button" class="ghost">Export JSON</button>
-        <label class="ghost file">Import JSON<input id="importTpl" type="file" accept="application/json,.json" hidden></label>
+        <button id="exportTpl" type="button" class="btn-ghost">Export JSON</button>
+        <label class="btn-ghost file">Import JSON<input id="importTpl" type="file" accept="application/json,.json" hidden></label>
+        <span class="status small" id="tplStatus" role="status"></span>
       </div>
-      <p id="tplStatus" class="status" role="status"></p>
     </section>
 
-    <div class="save-bar">
-      <button id="save" type="button" class="primary">Save settings</button>
-      <span id="saveStatus" class="status" role="status"></span>
-    </div>
+    <!-- World -->
+    <section class="card world" id="world">
+      <h2>Chromy around the world 🌍</h2>
+      <div class="world-wrap">
+        <canvas class="globe" aria-label="Globe showing where Chromy is used"></canvas>
+        <div class="globe-tip" hidden></div>
+      </div>
+      <p class="globe-caption"></p>
+      <ol class="globe-top"></ol>
+    </section>
 
-    <footer class="muted">
-      Open source (MIT) ·
+    <!-- Share -->
+    <section class="card share">
+      <h2>Spread the spark ⚡</h2>
+      <p class="muted small" id="myStats"></p>
+      <div class="row" id="shareRow">
+        <a class="btn-ghost" data-share="x" target="_blank" rel="noopener noreferrer">Share on X</a>
+        <a class="btn-ghost" data-share="linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a class="btn-ghost" data-share="whatsapp" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a class="btn-ghost" data-share="reddit" target="_blank" rel="noopener noreferrer">Reddit</a>
+        <a class="btn-electric" id="rate" target="_blank" rel="noopener noreferrer">⭐ Rate Chromy</a>
+      </div>
+    </section>
+
+    <footer class="muted small">
+      Open source (MIT) by Shatadip Majumder ·
       <a href="https://github.com/shatadip/Chromy-AI" target="_blank" rel="noopener noreferrer">GitHub</a> ·
-      <a href="https://github.com/shatadip/Chromy-AI/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy</a>
+      <a href="https://github.com/shatadip/Chromy-AI/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy</a> ·
+      <a href="welcome.html">Setup guide</a>
     </footer>
   </main>
   <script type="module" src="options.js"></script>

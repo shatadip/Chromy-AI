@@ -1,0 +1,180 @@
+/* Chromy AI shared theme: tokens, electric accents, sparks. No external fonts: instant load. */
+:root {
+  --bg: #ffffff;
+  --bg-2: #f6f7fb;
+  --surface: #f1f2f9;
+  --card: #ffffff;
+  --text: #16182a;
+  --muted: #5d6178;
+  --border: #dfe1ec;
+  --accent: #5b4bff;
+  --accent-2: #13b3cf;
+  --spark: #ffc93c;
+  --accent-text: #ffffff;
+  --user-bg: #ecebff;
+  --ok: #148a48;
+  --error: #c62843;
+  --glow: 0 0 0 1px rgb(91 75 255 / 0.18), 0 6px 24px -8px rgb(91 75 255 / 0.45);
+  --globe-land: rgba(91, 75, 255, 0.55);
+  --globe-ocean-1: rgba(91, 75, 255, 0.14);
+  --globe-ocean-2: rgba(19, 179, 207, 0.04);
+  --radius: 12px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101119;
+    --bg-2: #0c0d14;
+    --surface: #1a1c29;
+    --card: #161826;
+    --text: #eceef7;
+    --muted: #9ca0b8;
+    --border: #2a2d42;
+    --accent: #8579ff;
+    --accent-2: #2fd0ea;
+    --user-bg: #262452;
+    --ok: #4fd18b;
+    --error: #ff6b82;
+    --glow: 0 0 0 1px rgb(133 121 255 / 0.3), 0 8px 30px -10px rgb(47 208 234 / 0.55);
+    --globe-land: rgba(133, 121, 255, 0.75);
+    --globe-ocean-1: rgba(133, 121, 255, 0.2);
+    --globe-ocean-2: rgba(16, 17, 25, 0.1);
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-font-smoothing: antialiased; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--accent); }
+button { font: inherit; cursor: pointer; color: inherit; }
+button:disabled { cursor: not-allowed; opacity: 0.55; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, kbd, pre { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+
+/* Electric primary button with a moving sheen. */
+.btn-electric {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 650;
+  color: var(--accent-text);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: var(--glow);
+  transition: transform 0.15s var(--ease), box-shadow 0.2s var(--ease), filter 0.2s;
+}
+.btn-electric::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.btn-electric:hover:not(:disabled)::after { animation: sheen 0.9s var(--ease); }
+.btn-electric:hover:not(:disabled) { filter: brightness(1.06); }
+.btn-electric:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
+@keyframes sheen { to { transform: translateX(120%); } }
+
+.btn-ghost {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 9px;
+  padding: 6px 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-ghost:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
+
+/* The Chromy wordmark bolt. */
+.bolt {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-size: 13px;
+  box-shadow: var(--glow);
+}
+.bolt.live { animation: charge 2.4s ease-in-out infinite; }
+@keyframes charge {
+  0%, 100% { box-shadow: var(--glow); }
+  50% { box-shadow: 0 0 0 1px rgb(255 201 60 / 0.5), 0 0 18px 2px rgb(255 201 60 / 0.45); }
+}
+
+/* Spark burst (spawned by sparks.js). */
+.spark {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: var(--spark);
+  box-shadow: 0 0 8px 2px var(--spark);
+  z-index: 9999;
+  animation: spark-fly 0.7s var(--ease) forwards;
+}
+@keyframes spark-fly {
+  to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+}
+
+/* Toast. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translate(-50%, 20px);
+  opacity: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+  transition: opacity 0.2s, transform 0.25s var(--ease);
+  z-index: 9998;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* Status dots. */
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); flex: none; display: inline-block; }
+.dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.dot.off { background: var(--muted); }
+.dot.warn { background: var(--spark); }
+
+/* Globe widget. */
+.world { position: relative; }
+.world canvas.globe { width: 100%; aspect-ratio: 1; display: block; touch-action: none; cursor: grab; }
+.world canvas.globe:active { cursor: grabbing; }
+.globe-tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 12px));
+  max-width: 240px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  pointer-events: none;
+  white-space: normal;
+  z-index: 2;
+}
+.globe-caption { color: var(--muted); font-size: 12px; margin: 8px 0 4px; text-align: center; }
+.globe-top { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; list-style: none; padding: 0; margin: 6px 0 0; }
+.globe-top li { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--surface); }
+.globe-top li.you { outline: 1px solid var(--spark); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  .spark { display: none; }
+}

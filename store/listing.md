@@ -1,10 +1,10 @@
-# Chrome Web Store listing: copy-paste fields
+# Chrome Web Store listing (v1.2.0): copy-paste fields
 
-## Name
+## Name (≤75)
 Chromy AI - Ask / Task / Repeat
 
-## Summary (max 132 chars)
-Better AI prompts in seconds. Runs on local AI (Chrome on-device or Ollama) or Gemini. Ask, run tasks on pages or the web, repeat.
+## Summary (≤132, shown in search results)
+Free AI prompt coach that runs on your own computer. Score & fix prompts, ask Socrates, run tasks on any page. No key needed.
 
 ## Category
 Productivity (secondary: Tools)
@@ -13,52 +13,70 @@ Productivity (secondary: Tools)
 English
 
 ## Description
-Chromy AI is a tiny prompt coach and task runner that lives in your toolbar.
+Your prompts, electrified ⚡
 
-ASK: paste any prompt and get a one-line verdict, up to 3 concrete fixes, and an improved prompt you can copy in one click.
+Chromy AI is a free prompt coach that lives in your toolbar and runs on YOUR computer. Paste any prompt and get a score from 0 to 100, up to three concrete fixes, and a better prompt you can copy in one click.
 
-TASK: run a prompt on the page you're reading ("Summarise this in 5 bullets", "Extract all dates") or tick "Search the web" for fresh answers with cited sources.
+★ WHAT YOU GET
+⚡ Prompt score (0-100) + fixes + an improved prompt
+🏛 Socrates mode: three sharp questions that help you discover what you really want
+🤔 "Question it": the AI examines its own answer for mistakes (humans make them; so do AIs)
+📄 Task on any page: summarise, explain like I'm 12, extract, humanize text
+★ Repeat: save prompts and re-run them in one click (starter prompts included)
+🧠 Short memory so follow-ups just work
+🌍 A spinning globe of where Chromy is used around the world
+🌙 Light & dark, keyboard friendly (Alt+Shift+Y to open, Ctrl+Enter to send)
 
-REPEAT: save your best prompts and re-run them in one click. Export and import them as JSON.
+★ FREE LOCAL AI, SET UP IN 2 CLICKS
+A guided setup a 10-year-old can finish: allow, install Ollama, and Chromy downloads the right AI "brain" for your computer with a progress bar. No terminal, no account, no bill. Newer PCs can use Chrome's built-in on-device AI with zero installs.
 
-SHORT MEMORY: remembers the last few turns so follow-ups just work. Clear it with one click.
+★ ALWAYS ANSWERS
+Chromy tries your favourite engine and quietly falls back to the next one that works. Advanced users can add their own Gemini, Claude or OpenAI key for web search with sources. Models are picked automatically for your hardware.
 
-ALWAYS ANSWERS: runs on Chrome's built-in on-device AI, on Ollama on your own computer, or on Google Gemini with your own key. If one engine is missing, offline or over quota, the next one answers automatically.
-
-PRIVATE BY DESIGN
-• Local engines keep everything on your computer.
-• Gemini is optional and uses your own API key (free tier at aistudio.google.com).
-• No servers, no accounts, no analytics.
-• Page text is read only when you ask it to.
+★ PRIVATE BY DESIGN
+• With local AI, prompts never leave your computer
+• No analytics, no tracking, no account
+• Page text is read only when you tick "Use this page"
 • Open source (MIT): https://github.com/shatadip/Chromy-AI
 
-Shortcut: Alt+Shift+Y opens Chromy AI. Ctrl+Enter sends.
+Made with care (and a few human mistakes) by Shatadip Majumder.
 
 ## Privacy practices tab
 
 **Single purpose:**
-Help users write better AI prompts and run them on the current page or the web, using on-device AI, the user's local Ollama, or the user's own Google Gemini API key.
+Help users write better AI prompts and run them on the current page or the web, using on-device AI, the user's local Ollama, or the user's own Gemini/Claude/OpenAI API key.
 
 **Permission justifications:**
-- `storage`: Saves the user's settings, API key, short conversation memory and saved prompts locally on the device.
+- `storage`: Saves settings, API keys the user adds, short conversation memory, saved prompts and a local usage streak, on the device only.
 - `activeTab`: Reads the text of the current tab only when the user runs a task with "Use this page" ticked.
 - `scripting`: Injects a one-off function into the active tab (granted via activeTab) to read its visible text or selection when the user asks.
-- Host permission `https://generativelanguage.googleapis.com/*`: Sends the user's prompt to the Google Gemini API when the user has added a key. This is the only remote service the extension talks to.
-- Optional host permissions `http://localhost:11434/*` and `http://127.0.0.1:11434/*`: Requested only when the user clicks "Connect Ollama", to send prompts to the Ollama AI server running on the user's own computer.
 - `declarativeNetRequestWithHostAccess`: One rule that removes the Origin header from the extension's own requests to the local Ollama server (localhost:11434), which otherwise rejects browser-extension origins. It does not touch any other traffic.
+- Host permission `https://generativelanguage.googleapis.com/*`: Sends the user's prompt to Google Gemini when the user has added their own key.
+- Optional host permissions `http://localhost:11434/*`, `http://127.0.0.1:11434/*`: Requested when the user clicks "Allow" in setup, to talk to the Ollama AI app on the user's own computer.
+- Optional host permissions `https://api.anthropic.com/*`, `https://api.openai.com/*`: Requested only when the user connects their own Claude or OpenAI key.
 
-**Remote code:** No, I am not using remote code.
+**Remote code:** No, I am not using remote code. (All JavaScript ships in the package. The extension downloads one public JSON data file of aggregate per-country install counts for the globe; it is data, not code.)
 
 **Data usage (tick):**
-- Website content: collected only when the user chooses "Use this page", sent only to the AI engine that answers (on-device, the user's local Ollama, or Google Gemini).
-- Personally identifiable info / health / financial / authentication / location / web history / user activity: not collected. (The API key is the user's own credential, stored locally and sent only to Google as authentication.)
+- Website content: only when the user chooses "Use this page", sent only to the AI engine that answers (on-device, the user's local Ollama, or the provider of the user's own key).
+- Authentication information: the user's own API keys, stored locally and sent only to that provider as authentication.
+- Everything else (PII, health, financial, location, web history, user activity): not collected.
 
 Certify all three: not sold to third parties; not used for unrelated purposes; not used for creditworthiness or lending.
 
 **Privacy policy URL:**
 https://github.com/shatadip/Chromy-AI/blob/main/PRIVACY.md
 
-## Assets needed
-- Icon 128×128: `extension/icons/icon128.png` ✅
-- At least 1 screenshot, 1280×800 or 640×400 (PNG/JPEG): take from the popup (see README)
-- Small promo tile 440×280 (optional but recommended)
+## Graphics (generated by `node scripts/store-assets.mjs`)
+- Store icon 128×128: `extension/icons/icon128.png`
+- Screenshots 1280×800 (upload in this order):
+  1. `store/screenshots/screenshot-1-score.png`
+  2. `store/screenshots/screenshot-3-local-ai.png`
+  3. `store/screenshots/screenshot-2-socrates.png`
+  4. `store/screenshots/screenshot-5-repeat.png`
+  5. `store/screenshots/screenshot-4-keys.png`
+- Small promo tile 440×280: `store/screenshots/promo-small-440x280.png`
+- Marquee 1400×560: `store/screenshots/promo-marquee-1400x560.png`
+
+## Store SEO notes
+Search terms people use and that the listing covers naturally: prompt engineering, prompt generator, prompt improver, ChatGPT prompts, AI writing assistant, summarize page, local AI, Ollama, offline AI, private AI, Gemini, Claude. Don't keyword-stuff; the Web Store penalises it.

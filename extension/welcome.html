@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome to Chromy AI</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="welcome.css">
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div class="logo"><img src="icons/icon128.png" alt="" width="72" height="72"></div>
+      <h1>Hi, I'm Chromy <span class="zap">⚡</span></h1>
+      <p class="lead">Let's give your browser a free AI brain. It runs on <strong>your</strong> computer: private, no account, no bill.</p>
+      <p class="quote" id="quote"></p>
+    </header>
+
+    <!-- Path A: Chrome's own on-device AI works here -->
+    <section id="builtinPath" class="card big" hidden>
+      <h2>Good news: your Chrome already has an AI inside 🎉</h2>
+      <p>Chrome's built-in AI runs right on this computer. <span id="builtinNote"></span></p>
+      <div class="row">
+        <button id="builtinGo" class="btn-electric">Use Chrome's AI</button>
+        <div class="bar" id="builtinBar" hidden><span></span></div>
+      </div>
+      <p class="small muted">Prefer Ollama anyway? <a href="#" id="showOllama">Set up Ollama instead</a></p>
+    </section>
+
+    <!-- Path B: Ollama, three steps -->
+    <ol id="ollamaPath" class="steps">
+      <li class="card step" id="step1">
+        <div class="num">1</div>
+        <div class="body">
+          <h2>Let Chromy talk to your AI</h2>
+          <p>Chromy will only talk to the AI app on <em>this</em> computer. Nothing goes to the internet.</p>
+          <button id="allow" class="btn-electric">Allow</button>
+          <p class="done-msg">✓ Allowed</p>
+        </div>
+      </li>
+
+      <li class="card step" id="step2">
+        <div class="num">2</div>
+        <div class="body">
+          <h2>Install the free AI app (Ollama)</h2>
+          <p>Download it, open the file and click <strong>Install</strong>. That's it. I'll notice when it's running.</p>
+          <div class="row">
+            <a id="download" class="btn-electric" href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">Download Ollama</a>
+            <span class="waiting" id="waiting"><span class="dot warn"></span> Waiting for Ollama…</span>
+          </div>
+          <p class="small muted" id="linuxHint" hidden>On Linux, paste this into a terminal: <code>curl -fsSL https://ollama.com/install.sh | sh</code></p>
+          <p class="small muted">Already installed? Open <strong>Ollama</strong> from your Start menu / Applications and I'll find it.</p>
+          <p class="done-msg" id="ollamaFound">✓ Ollama is running</p>
+        </div>
+      </li>
+
+      <li class="card step" id="step3">
+        <div class="num">3</div>
+        <div class="body">
+          <h2>Give it a brain</h2>
+          <p id="brainIntro">Pick a brain. I've picked the best one for your computer.</p>
+          <div class="brains" id="brains" role="radiogroup" aria-label="AI model"></div>
+          <div class="row">
+            <button id="pull" class="btn-electric">Download brain</button>
+            <button id="cancelPull" class="btn-ghost" hidden>Cancel</button>
+          </div>
+          <div class="progress" id="progress" hidden>
+            <div class="bar"><span id="barFill"></span></div>
+            <p class="small muted" id="pullStatus"></p>
+          </div>
+          <p class="done-msg" id="brainDone">✓ Brain ready</p>
+        </div>
+      </li>
+
+      <li class="card step" id="step4">
+        <div class="num">4</div>
+        <div class="body">
+          <h2>Say hi 👋</h2>
+          <p>Let's check everything works. First answers can take a few seconds while the brain wakes up.</p>
+          <button id="tryIt" class="btn-electric">Try it</button>
+          <pre class="answer" id="answer" hidden></pre>
+          <div class="finish" id="finish" hidden>
+            <p><strong>You're all set.</strong> Open Chromy any time with <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Y</kbd>, or pin it: click the 🧩 puzzle icon in Chrome's toolbar, then 📌 next to Chromy.</p>
+          </div>
+        </div>
+      </li>
+    </ol>
+
+    <p class="alt">
+      Have an API key (Gemini, Claude, OpenAI)? <a href="options.html#advanced">Use your own key instead</a>
+    </p>
+
+    <section class="card world" id="world">
+      <h2>You're joining people around the world 🌍</h2>
+      <div class="world-wrap">
+        <canvas class="globe" aria-label="Globe showing where Chromy is used"></canvas>
+        <div class="globe-tip" hidden></div>
+      </div>
+      <p class="globe-caption"></p>
+      <ol class="globe-top"></ol>
+    </section>
+
+    <footer class="small muted">
+      Open source (MIT) by Shatadip Majumder ·
+      <a href="https://github.com/shatadip/Chromy-AI" target="_blank" rel="noopener noreferrer">GitHub</a> ·
+      <a href="https://github.com/shatadip/Chromy-AI/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy</a>
+    </footer>
+  </main>
+  <script type="module" src="welcome.js"></script>
+</body>
+</html>

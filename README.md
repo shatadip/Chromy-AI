@@ -1,84 +1,102 @@
-# Chromy AI: Ask / Task / Repeat
+<p align="center"><img src="extension/icons/icon128.png" width="96" alt="Chromy AI"></p>
 
-A small, open-source Chrome extension for people who prompt AI all day.
+<h1 align="center">Chromy AI ⚡ Ask / Task / Repeat</h1>
 
-- **Ask**: paste a prompt and get a verdict, up to 3 fixes and an improved version you can copy.
-- **Task**: run a prompt on the page you're reading (**Use this page**) or on the live web (**Search the web**, with sources).
-- **Repeat**: save prompts and re-run them in one click.
-- **Short memory**: remembers the last few turns (default 10) so follow-ups just work. One click clears it.
+<p align="center"><b>Your prompts, electrified.</b> A free AI prompt coach for Chrome that runs on <i>your own computer</i>.<br>
+Score and fix any prompt, let Socrates question it, run it on the page you're reading, and repeat your favourites in one click.</p>
 
-No servers, no accounts, no tracking.
+<p align="center">
+  <a href="https://github.com/shatadip/Chromy-AI/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/shatadip/Chromy-AI/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Manifest V3" src="https://img.shields.io/badge/Chrome-Manifest%20V3-5b4bff">
+  <img alt="Local AI" src="https://img.shields.io/badge/AI-local%20first-13b3cf">
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-ffc93c"></a>
+</p>
 
-## AI engines: always an answer
+<p align="center"><img src="store/screenshots/screenshot-1-score.png" width="760" alt="Chromy scoring a prompt"></p>
 
-Chromy tries engines in order and falls back automatically when one is missing, offline or over quota:
+## Why people like it
 
-| Engine | Cost | Needs | Internet |
+- **⚡ Prompt score (0-100)** with up to 3 concrete fixes and a better prompt you can copy.
+- **🏛 Socrates mode:** three sharp questions instead of answers, so you find out what you actually want.
+- **🤔 Question it:** one click makes the AI examine its own answer for mistakes. Humans make mistakes; so do AIs.
+- **📄 Task on any page:** summarise, explain like I'm 12, extract, or humanize text, on the tab you're reading.
+- **★ Repeat:** save prompts and re-run them in one click (starter prompts included).
+- **🧠 Short memory:** follow-ups just work; one click to forget.
+- **🔒 Private by default:** with local AI, prompts never leave your computer. No account, no tracking, no bill.
+- **🌍 Chromy around the world:** a spinning globe of where Chromy is used (aggregate store numbers; the extension collects nothing).
+
+## Free local AI, set up in 2 clicks
+
+On install, Chromy opens a guided setup simple enough for a 10-year-old:
+
+1. **Allow** Chromy to talk to the AI on your computer.
+2. **Install Ollama** (one download button; Chromy notices when it's running).
+3. **Download a brain.** Chromy picks the best model for your computer's memory and downloads it with a progress bar. No terminal.
+4. **Say hi.** 👋
+
+Got a newer PC? Chrome's own **on-device AI** works too, with zero installs.
+
+| Engine | Cost | Needs | Web search |
 |---|---|---|---|
-| **Chrome on-device AI** (Gemini Nano) | Free | Chrome 138+, >4 GB VRAM or 16 GB RAM, 22 GB free disk | No |
-| **Ollama** (local) | Free | [Ollama](https://ollama.com/download) + a model, e.g. `ollama pull llama3.2:3b` | No |
-| **Gemini** (cloud) | Free tier / paid | API key from [Google AI Studio](https://aistudio.google.com/app/apikey) | Yes, and the only engine that can **Search the web** |
+| **Chrome on-device AI** (Gemini Nano) | Free | Recent Chrome, >4 GB VRAM or 16 GB RAM | – |
+| **Ollama** (local, recommended) | Free | [Ollama](https://ollama.com/download) + a model (guided) | – |
+| **Gemini** (your key) | Free tier / paid | [AI Studio key](https://aistudio.google.com/app/apikey) | ✓ |
+| **Claude** (your key) | Paid | [Anthropic key](https://console.anthropic.com/settings/keys) | ✓ |
+| **OpenAI** (your key) | Paid | [OpenAI key](https://platform.openai.com/api-keys) | – |
 
-Default order: on-device → Ollama → Gemini. With **Search the web** ticked, Gemini goes first, and a local engine answers (without web results) if Gemini fails. Each answer shows which engine produced it.
-
-### Ollama setup
-1. Install Ollama and pull a model: `ollama pull llama3.2:3b` (older/low-RAM PCs: `qwen2.5:1.5b`).
-2. In Chromy settings, click **Connect Ollama** and allow access to `localhost:11434`.
-3. If you see a 403 error, set the environment variable `OLLAMA_ORIGINS=chrome-extension://*` and restart Ollama.
+**Always answers:** Chromy tries your preferred engine first and quietly falls back to the next working one (not installed, offline, over quota: skipped). Every answer says which engine produced it. Models are chosen automatically (biggest that fits your RAM) until you pick one yourself.
 
 ## Install
 
-**Chrome Web Store:** _link coming after review_
+- **Chrome Web Store:** _link after review_
+- **From source:** clone → `chrome://extensions` → Developer mode → **Load unpacked** → pick the `extension/` folder.
 
-**From source:**
-1. Clone this repo.
-2. Open `chrome://extensions`, turn on **Developer mode**.
-3. Click **Load unpacked** and select the `extension/` folder.
-4. The settings page opens. Set up at least one engine (see above) and click **Save**.
-
-Shortcut: `Alt+Shift+Y` opens the popup. `Ctrl+Enter` sends.
+Shortcuts: `Alt+Shift+Y` opens Chromy, `Ctrl+Enter` sends.
 
 ## Privacy
 
-Your key, memory and saved prompts are stored only in `chrome.storage.local`. Requests go only to the engine that answers (on-device, your own `localhost:11434`, or `generativelanguage.googleapis.com`), and only when you press Ask/Run. Page text is read only when you tick **Use this page**. See [PRIVACY.md](PRIVACY.md).
-
-## Permissions
+Settings, memory, saved prompts and your streak live only in `chrome.storage.local`. Requests go only to the engine that answers, only when you press Ask/Run. Page text is read only when you tick **Use this page**. The globe downloads a public JSON file of aggregate per-country totals from this repo and guesses your own country locally from your time zone, never sending it anywhere. Full policy: [PRIVACY.md](PRIVACY.md).
 
 | Permission | Why |
 |---|---|
-| `storage` | Save your settings, short memory and prompts locally |
+| `storage` | Settings, memory, prompts, streak (local) |
 | `activeTab` + `scripting` | Read the current tab's text, only when you run a task with **Use this page** |
-| `generativelanguage.googleapis.com` | Call the Gemini API |
-| `localhost:11434` (optional, asked on **Connect Ollama**) | Talk to Ollama on your own computer |
-| `declarativeNetRequestWithHostAccess` | Remove the `Origin` header on Chromy's own requests to local Ollama, so Ollama accepts them without extra config |
+| `generativelanguage.googleapis.com` | Gemini, if you add a key |
+| Optional: `localhost:11434` | Ollama on your computer (asked in setup) |
+| Optional: `api.anthropic.com`, `api.openai.com` | Only if you connect those keys |
+| `declarativeNetRequestWithHostAccess` | Removes the `Origin` header on Chromy's own requests to local Ollama, so it works without extra config |
 
-## Project layout
-
-```
-extension/        the extension (load this folder unpacked)
-  background.js   service worker: runs requests, Ollama header rule
-  popup.*         Ask / Task / Repeat UI
-  options.*       settings page
-  lib/engine.js   engine chain + fallback
-  lib/local.js    Chrome on-device AI + Ollama clients
-  lib/gemini.js   Gemini client
-  lib/store.js    storage helpers
-docs/SRS.md       software requirements specification
-store/            Chrome Web Store listing copy
-scripts/          icon generator, packaging script
-```
-
-## Build a release zip
+## Development
 
 ```bash
-node scripts/package.mjs
+npm install          # dev tools only; the extension has no build step
+npm test             # unit tests (node:test) + static release checks
+node scripts/e2e.mjs # real Chrome + real Ollama end-to-end, saves screenshots
+node scripts/store-assets.mjs  # store screenshots & promo tiles
+node scripts/package.mjs       # dist/chromy-ai-v<version>.zip
 ```
 
-This writes `dist/chromy-ai-v<version>.zip`, ready to upload to the Chrome Web Store.
+```
+extension/
+  background.js      service worker: runs requests, Ollama header rule
+  popup.*            Ask / Task / Repeat
+  options.*          settings (auto-save)
+  welcome.*          first-run setup
+  lib/engine.js      engine chain + fallback
+  lib/local.js       Chrome on-device AI + Ollama (pull, auto model choice)
+  lib/cloud.js       Claude + OpenAI     lib/gemini.js  Gemini
+  lib/prompts.js     coach / Socrates / task prompts, score parsing
+  lib/globe.js       dependency-free canvas globe
+  lib/fun.js         quotes, loading lines, country guess, sharing
+docs/SRS.md          requirements
+stats/countries.json public aggregate install stats (feeds the globe)
+```
+
+To refresh the globe: export "users by region" CSV from the Chrome Web Store dashboard, run `node scripts/update-stats.mjs export.csv`, commit.
 
 ## Contributing
 
-Contributions are welcome. Open your pull request against the **`dev`** branch. `main` is release-only and maintained by the owner. See [CONTRIBUTING.md](CONTRIBUTING.md).
+PRs welcome, **against `dev`** (`main` is release-only; PRs to `main` are moved automatically). See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

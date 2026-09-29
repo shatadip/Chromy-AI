@@ -2,25 +2,6 @@
 
 const API = 'https://generativelanguage.googleapis.com/v1beta';
 
-export const SYSTEM_PROMPTS = {
-  ask: [
-    'You are Chromy AI, a concise prompt-engineering coach.',
-    'The user gives you a prompt they plan to send to an AI, or a question about prompting.',
-    'If it is a prompt: reply in under 150 words with exactly these parts:',
-    '1. "Verdict:" one sentence on how clear and effective it is.',
-    '2. "Fixes:" up to 3 short bullet points (role, context, constraints, output format, examples).',
-    '3. "Improved prompt:" the rewritten prompt inside a single fenced code block.',
-    'If it is a question about prompting: answer in under 120 words with practical tips.',
-    'Never pad. Plain text and simple markdown only.'
-  ].join('\n'),
-  task: [
-    'You are Chromy AI, a fast, precise assistant inside the user\'s browser.',
-    'Do exactly what the user asks. Be brief and well structured; prefer bullet points.',
-    'If page content is provided, base your answer on it and say when the page does not contain the answer.',
-    'If you used web search, rely on the retrieved sources for facts that may have changed.'
-  ].join('\n')
-};
-
 export class GeminiError extends Error {
   constructor(message, status) {
     super(message);
@@ -29,7 +10,7 @@ export class GeminiError extends Error {
 }
 
 // Seconds Google asks us to wait, from google.rpc.RetryInfo (e.g. "23s" or "0.5s").
-function retryDelaySeconds(error) {
+export function retryDelaySeconds(error) {
   const info = (error?.details || []).find((d) => /RetryInfo$/.test(d['@type'] || ''));
   const secs = parseFloat(info?.retryDelay);
   return Number.isFinite(secs) ? Math.ceil(secs) : null;
@@ -46,7 +27,7 @@ function friendlyError(status, error) {
     return [
       `Gemini quota or rate limit hit${wait ? `. Retry in ~${wait}s` : ''}.`,
       detail && `Google says: ${detail}`,
-      'Tip: pick a lighter model (e.g. a flash-lite one) in Settings → Load models.'
+      'Tip: pick a lighter model (e.g. a flash-lite one) in Settings.'
     ]
       .filter(Boolean)
       .join('\n');
@@ -87,25 +68,37 @@ export async function listModels(apiKey) {
     .map((m) => ({ id: m.name.replace(/^models\//, ''), label: m.displayName || m.name }));
 }
 
+/** Best default from a model list: stable "flash" (not lite/preview/image/tts), newest version. */
+export function pickGeminiModel(models) {
+  const ids = models.map((m) => (typeof m === 'string' ? m : m.id));
+  if (ids.includes('gemini-flash-latest')) return 'gemini-flash-latest';
+  const version = (id) => parseFloat((id.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || '0');
+  const flash = ids
+    .filter((id) => /^gemini-[\d.]+-flash$/.test(id))
+    .sort((a, b) => version(b) - version(a));
+  return flash[0] || ids.find((id) => /flash/.test(id) && !/image|tts|audio|live|embed/.test(id)) || ids[0] || '';
+}
+
 /**
  * @param {object} opts
  * @param {string} opts.apiKey
  * @param {string} opts.model
- * @param {'ask'|'task'} opts.mode
+ * @param {string} opts.system
  * @param {Array<{role:string,text:string}>} opts.history
  * @param {string} opts.userText prompt, with page content already attached
  * @param {boolean} opts.searchWeb
+ * @param {number} [opts.temperature]
  */
-export async function generate({ apiKey, model, mode, history, userText, searchWeb }) {
+export async function generate({ apiKey, model, system, history, userText, searchWeb, temperature = 0.6 }) {
   const contents = [
     ...history.map((m) => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.text }] })),
     { role: 'user', parts: [{ text: userText }] }
   ];
 
   const request = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.task }] },
+    systemInstruction: { parts: [{ text: system }] },
     contents,
-    generationConfig: { temperature: mode === 'ask' ? 0.4 : 0.7, maxOutputTokens: 2048 }
+    generationConfig: { temperature, maxOutputTokens: 2048 }
   };
   if (searchWeb) request.tools = [{ google_search: {} }];
 
@@ -113,7 +106,11 @@ export async function generate({ apiKey, model, mode, history, userText, searchW
     method: 'POST',
     body: JSON.stringify(request)
   });
+  return parseGeminiResponse(body);
+}
 
+/** Pure: extracts { text, sources } from a generateContent response. */
+export function parseGeminiResponse(body) {
   const candidate = body.candidates?.[0];
   const text = (candidate?.content?.parts || [])
     .map((p) => p.text || '')

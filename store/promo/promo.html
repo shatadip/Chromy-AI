@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chromy AI promo</title>
+<style>
+  :root { --a: #5b4bff; --b: #13b3cf; --spark: #ffc93c; --ink: #10121f; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: #fff;
+    background:
+      radial-gradient(900px 500px at 85% 20%, rgb(19 179 207 / .35), transparent 60%),
+      radial-gradient(900px 600px at 10% 100%, rgb(91 75 255 / .55), transparent 60%),
+      linear-gradient(135deg, #0d0e1a, #171a33);
+    display: flex; align-items: center; gap: 56px; padding: 0 72px;
+  }
+  .copy { flex: 1; min-width: 0; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 22px; opacity: .92; }
+  .brand img { width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 0 30px rgb(255 201 60 / .35); }
+  h1 { font-size: 58px; line-height: 1.04; letter-spacing: -.03em; margin: 22px 0 18px; }
+  h1 em { display: inline-block; font-style: normal; background: linear-gradient(90deg, var(--spark), #fff 60%); -webkit-background-clip: text; color: transparent; }
+  ul { list-style: none; padding: 0; display: grid; gap: 12px; font-size: 21px; color: #d6d8f0; }
+  li::before { content: "⚡"; margin-right: 10px; }
+  .badge { display: inline-block; margin-top: 26px; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 16px;
+    background: rgb(255 255 255 / .1); border: 1px solid rgb(255 255 255 / .25); }
+  .shot { flex: none; position: relative; }
+  .shot img { display: block; border-radius: 18px; box-shadow: 0 30px 80px -20px rgb(0 0 0 / .7), 0 0 0 1px rgb(255 255 255 / .12), 0 0 60px -10px rgb(91 75 255 / .7); }
+  .popup img { width: 410px; }
+  .wide img { width: 600px; max-height: 660px; object-fit: cover; object-position: top; }
+  .pair { display: flex; gap: 22px; }
+  .pair img { width: 330px; }
+  .bolt { position: absolute; font-size: 64px; filter: drop-shadow(0 0 18px var(--spark)); }
+
+  /* small tile & marquee */
+  body.tile { padding: 0 28px; gap: 18px; }
+  body.tile h1 { font-size: 34px; margin: 10px 0 8px; }
+  body.tile .brand { font-size: 17px; }
+  body.tile .brand img { width: 34px; height: 34px; }
+  body.tile p { font-size: 15px; color: #d6d8f0; }
+  body.marquee { padding: 0 90px; }
+  body.marquee h1 { font-size: 62px; }
+  body.marquee .popup img { width: 340px; }
+</style>
+</head>
+<body>
+<script>
+  const shots = {
+    1: {
+      h: 'Score & fix <em>any prompt</em> in seconds',
+      li: ['A 0-100 score for every prompt', 'Up to 3 fixes and a better prompt to copy', 'Kind about typos. Humans make mistakes.'],
+      badge: 'Free · runs on your computer',
+      img: '../raw/popup-ask.png', cls: 'popup'
+    },
+    2: {
+      h: 'Or let <em>Socrates</em> question you',
+      li: ['3 sharp questions instead of answers', 'Find what you really want from the AI', '"Question it" makes the AI check itself'],
+      badge: 'Plato would approve',
+      img: '../raw/popup-socrates.png', cls: 'popup'
+    },
+    3: {
+      h: 'Free local AI, <em>set up in 2 clicks</em>',
+      li: ['Guided setup a 10-year-old can finish', 'Downloads the AI brain for you, no terminal', 'Private: prompts never leave your computer'],
+      badge: 'Ollama · Chrome on-device AI',
+      img: '../raw/welcome-done.png', cls: 'wide'
+    },
+    4: {
+      h: 'Bring your <em>own keys</em> if you like',
+      li: ['Gemini, Claude or OpenAI', 'Web search with sources', 'Automatic fallback: it always answers'],
+      badge: 'Auto-picks the best model',
+      img: '../raw/options.png', cls: 'wide'
+    },
+    5: {
+      h: 'Ask. Task. <em>Repeat.</em>',
+      li: ['Run prompts on any page you are reading', 'Save favourites and re-run in one click', 'Light & dark, fast as a spark'],
+      badge: 'Open source · MIT',
+      pair: ['../raw/popup-repeat.png', '../raw/popup-ask-dark.png']
+    },
+    tile: { h: 'Better prompts. <em>Free local AI.</em>', p: 'Score, fix & question your prompts.' },
+    marquee: {
+      h: 'Your prompts, <em>electrified</em>',
+      li: ['Free local AI: no key, no bill', 'Prompt score, fixes & Socrates mode', 'Works on any page you read'],
+      img: '../raw/popup-socrates.png', cls: 'popup'
+    }
+  };
+  const key = new URLSearchParams(location.search).get('shot') || '1';
+  const s = shots[key];
+  if (key === 'tile') document.body.className = 'tile';
+  if (key === 'marquee') document.body.className = 'marquee';
+  const copy = document.createElement('div');
+  copy.className = 'copy';
+  copy.innerHTML = `<div class="brand"><img src="../../extension/icons/icon128.png" alt="">Chromy AI</div><h1>${s.h}</h1>` +
+    (s.li ? `<ul>${s.li.map((l) => `<li>${l}</li>`).join('')}</ul>` : '') +
+    (s.p ? `<p>${s.p}</p>` : '') + (s.badge ? `<span class="badge">${s.badge}</span>` : '');
+  document.body.append(copy);
+  if (s.img || s.pair) {
+    const shot = document.createElement('div');
+    shot.className = `shot ${s.cls || 'pair'}`;
+    shot.innerHTML = s.pair ? s.pair.map((p) => `<img src="${p}" alt="">`).join('') : `<img src="${s.img}" alt="">`;
+    const bolt = document.createElement('span');
+    bolt.className = 'bolt';
+    bolt.textContent = '⚡';
+    bolt.style.cssText = 'right:-26px;top:-34px';
+    shot.append(bolt);
+    document.body.append(shot);
+  }
+</script>
+</body>
+</html>

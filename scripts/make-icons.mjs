@@ -46,6 +46,20 @@ function png(size, rgba) {
 // Shape tests in unit space [0,1].
 const A = [91, 75, 255]; // #5b4bff
 const B = [25, 184, 212]; // #19b8d4
+// Bolt outline in unit space (clockwise), chunky enough to read at 16 px.
+const BOLT = [
+  [0.58, 0.14], [0.27, 0.56], [0.47, 0.56], [0.39, 0.87], [0.74, 0.43], [0.53, 0.43], [0.63, 0.14]
+];
+function inPolygon(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
 function sample(u, v) {
   // Rounded square background
   const r = 0.22, m = 0.02;
@@ -53,15 +67,8 @@ function sample(u, v) {
   const qy = Math.max(Math.abs(v - 0.5) - (0.5 - m - r), 0);
   if (Math.hypot(qx, qy) > r) return null;
 
-  // "C" ring, opening to the right
-  const cx = 0.47, cy = 0.5;
-  const d = Math.hypot(u - cx, v - cy);
-  const ang = Math.atan2(v - cy, u - cx);
-  const inRing = d > 0.19 && d < 0.3 && Math.abs(ang) > 0.75;
-  // Spark (4-point star) in the opening
-  const sx = u - 0.72, sy = v - 0.5;
-  const spark = Math.abs(sx) ** 0.6 + Math.abs(sy) ** 0.6 < 0.33 ** 0.6 * 1.05 && Math.abs(sx) + Math.abs(sy) < 0.14;
-  if (inRing || spark) return [255, 255, 255];
+  // Lightning bolt (white), with a warm spark-yellow core toward the tip.
+  if (inPolygon(u, v, BOLT)) return v > 0.62 ? [255, 236, 170] : [255, 255, 255];
 
   const t = (u + v) / 2;
   return A.map((a, i) => Math.round(a + (B[i] - a) * t));

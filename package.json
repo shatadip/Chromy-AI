@@ -1,0 +1,21 @@
+{
+  "name": "chromy-ai",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Chromy AI - Ask / Task / Repeat. Dev tooling only; the extension itself has no build step.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "icons": "node scripts/make-icons.mjs",
+    "globe": "node scripts/build-globe.mjs",
+    "package": "node scripts/package.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "devDependencies": {
+    "i18n-iso-countries": "7.14.0",
+    "puppeteer-core": "^25.12.0",
+    "topojson-client": "3.1.0",
+    "world-atlas": "2.0.2"
+  },
+  "license": "MIT"
+}
