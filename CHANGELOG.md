@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2
+- **Automatic updates:** Chromy installs a downloaded update as soon as it isn't busy answering (no browser restart needed) and tells you once: "Updated to vX ⚡".
+- Checks for updates when you open it (at most every 6 hours) and at browser start; Settings → **Updates** shows your version and a "Check for updates" button.
+- Behind the scenes: every new version is tested, released on GitHub and published to the Chrome Web Store automatically.
+
 ## 1.2.1
 - **Ask now answers questions.** "What is thiamin?" gets a real answer plus a 💡 prompt tip; prompts meant for another AI ("write a blog post…") still get the score, fixes and a better prompt. One click switches either way ("💬 Just answer it" / "⚡ Coach this prompt").
 - A 💡 tip is always shown for questions (rule-based fallback when a small model forgets it, and inline "Prompt tip:" is detected).
